@@ -38,9 +38,12 @@ const Index = () => {
   // Filter data based on current filters
   const filterData = (data: KPIRecord[]) => {
     return data.filter(item => {
-      const matchesSearch = !filters.searchTerm || 
-        Object.values(item).some(value => 
-          value?.toString().toLowerCase().includes(filters.searchTerm.toLowerCase())
+      const matchesSearch = !filters.searchTerm ||
+        Object.values(item).some(value =>
+          (value ?? '')
+            .toString()
+            .toLowerCase()
+            .includes(filters.searchTerm.toLowerCase())
         );
       
       const matchesGroup = !filters.selectedGroup || 

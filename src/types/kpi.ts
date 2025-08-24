@@ -10,7 +10,8 @@ export interface KPIRecord {
   'ร้อยละ (%)': number | string;
   'เกณฑ์ผ่าน (%)': number | string;
   'ข้อมูลวันที่': string;
-  'sheet_source': string;
+  'sheet_source'?: string;
+  'แหล่งข้อมูล'?: string;
   'service_code_ref': string;
   'kpi_info_id': string;
 }
@@ -61,14 +62,14 @@ export interface SummaryStats {
 
 export interface KPIData {
   configuration: KPIRecord[];
-  sourceData: { [key: string]: any[] };
+  sourceData: { [key: string]: unknown[] };
   groups: string[];
   summary: SummaryStats;
   metadata?: {
     totalKPIs: number;
     totalSheets: number;
     lastUpdate: string;
-  }
+  };
 }
 
 export interface APIResponse<T> {

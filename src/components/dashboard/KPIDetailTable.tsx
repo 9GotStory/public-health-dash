@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUpDown, ChevronLeft, Info, Database, Calendar, Building2, Table as TableIcon } from "lucide-react";
 import { KPIRecord } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
 
@@ -67,7 +66,7 @@ export const KPIDetailTable = ({
         <div className="flex items-center space-x-4">
           {onBack && (
             <Button variant="outline" onClick={onBack} size="sm">
-              <ChevronLeft className="h-4 w-4 mr-1" />
+              <i className="fa-solid fa-chevron-left mr-1"></i>
               กลับ
             </Button>
           )}
@@ -84,7 +83,7 @@ export const KPIDetailTable = ({
       </div>
 
       {/* Main KPI Groups */}
-      <div className="space-y-8">
+      <div className="space-y-8 border border-primary/20 rounded-lg p-4">
         {Object.entries(groupedData).map(([mainKPI, subKPIGroups]) => (
           <Card key={mainKPI} className="p-6">
             <div className="mb-6">
@@ -110,7 +109,7 @@ export const KPIDetailTable = ({
                             size="sm"
                             onClick={() => onRawDataClick(groupSheetSource)}
                           >
-                            <Database className="h-4 w-4 mr-1" />
+                            <i className="fa-solid fa-database mr-1"></i>
                             ข้อมูลทั้งหมด
                           </Button>
                         )}
@@ -120,7 +119,7 @@ export const KPIDetailTable = ({
                             size="sm"
                             onClick={() => onKPIInfoClick(records[0].kpi_info_id)}
                           >
-                            <Info className="h-4 w-4 mr-1" />
+                            <i className="fa-solid fa-circle-info mr-1"></i>
                             รายละเอียด KPI
                           </Button>
                         )}
@@ -154,7 +153,7 @@ export const KPIDetailTable = ({
                             <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
                               <td className="p-3">
                                 <div className="flex items-center space-x-2">
-                                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                                  <i className="fa-solid fa-building text-muted-foreground"></i>
                                   <span>{record['กลุ่มเป้าหมาย']}</span>
                                 </div>
                               </td>
@@ -186,7 +185,7 @@ export const KPIDetailTable = ({
                                       onClick={() => onRawDataClick(sheetSource, record)}
                                       title="เฉพาะหน่วยนี้"
                                     >
-                                      <TableIcon className="h-4 w-4" />
+                                      <i className="fa-solid fa-table"></i>
                                     </Button>
                                   )}
                                 </div>
@@ -201,7 +200,7 @@ export const KPIDetailTable = ({
                   {/* Update Info */}
                   {records[0]?.['ข้อมูลวันที่'] && (
                     <div className="mt-3 pt-3 border-t text-xs text-muted-foreground flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
+                      <i className="fa-solid fa-calendar mr-1"></i>
                       อัพเดทล่าสุด: {records[0]['ข้อมูลวันที่']}
                     </div>
                   )}
@@ -216,7 +215,7 @@ export const KPIDetailTable = ({
       {Object.keys(groupedData).length === 0 && (
         <Card className="p-8 text-center">
           <div className="text-muted-foreground">
-            <Database className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <i className="fa-solid fa-database text-6xl mx-auto mb-4 opacity-50"></i>
             <p className="text-lg">ไม่พบข้อมูลตัวชี้วัดที่ตรงกับเงื่อนไข</p>
           </div>
         </Card>

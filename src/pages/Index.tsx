@@ -18,32 +18,53 @@ const calculateSummary = (data: KPIRecord[]): SummaryStats => {
     averagePercentage: 0,
     passedKPIs: 0,
     failedKPIs: 0,
-    groupStats: {}
+    groupStats: {},
   };
+
+  const kpiMap: Record<string, {
+    group: string;
+    threshold: number;
+    percentages: number[];
+  }> = {};
 
   data.forEach(item => {
     const percentage = calculatePercentage(item);
     if (percentage === null) return;
-    const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']?.toString() || '0');
-    const passed = percentage >= threshold;
+
+    const key = item.kpi_info_id ||
+      `${item['ตัวชี้วัดหลัก']}|${item['ตัวชี้วัดย่อย']}|${item['กลุ่มเป้าหมาย']}`;
+
+    if (!kpiMap[key]) {
+      kpiMap[key] = {
+        group: item['ประเด็นขับเคลื่อน'],
+        threshold: parseFloat(item['เกณฑ์ผ่าน (%)']?.toString() || '0'),
+        percentages: [],
+      };
+    }
+
+    kpiMap[key].percentages.push(percentage);
+  });
+
+  Object.values(kpiMap).forEach(({ group, threshold, percentages }) => {
+    const average = percentages.reduce((sum, p) => sum + p, 0) / percentages.length;
+    const passed = average >= threshold;
 
     summary.totalKPIs++;
+    summary.averagePercentage += average;
     if (passed) summary.passedKPIs++; else summary.failedKPIs++;
-    summary.averagePercentage += percentage;
 
-    const group = item['ประเด็นขับเคลื่อน'];
     if (!summary.groupStats[group]) {
       summary.groupStats[group] = {
         count: 0,
         totalPercentage: 0,
         passed: 0,
         failed: 0,
-        averagePercentage: 0
+        averagePercentage: 0,
       };
     }
     const g = summary.groupStats[group];
     g.count++;
-    g.totalPercentage += percentage;
+    g.totalPercentage += average;
     if (passed) g.passed++; else g.failed++;
   });
 

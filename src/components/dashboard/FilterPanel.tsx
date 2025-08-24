@@ -22,8 +22,8 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
   const [isExpanded, setIsExpanded] = useState(false);
   const itemClass = "whitespace-normal break-words line-clamp-2";
 
-
-  const itemClass = "whitespace-normal break-words line-clamp-2";
+  // Utility class reused by all SelectItem entries
+  const optionClass = "whitespace-normal break-words line-clamp-2";
 
   // Build cascading filter options based on current selections
   const filteredByGroup = filters.selectedGroup
@@ -149,12 +149,12 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 <SelectValue placeholder="เลือกประเด็นขับเคลื่อน" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
+                <SelectItem value="all" className={optionClass}>ทั้งหมด</SelectItem>
                 {uniqueGroups.map(group => (
                   <SelectItem
                     key={group}
                     value={group}
-                    className={itemClass}
+                    className={optionClass}
                     title={group}
                   >
                     {group}
@@ -176,12 +176,12 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 <SelectValue placeholder="เลือกตัวชี้วัดหลัก" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
+                <SelectItem value="all" className={optionClass}>ทั้งหมด</SelectItem>
                 {uniqueMainKPIs.map(kpi => (
                   <SelectItem
                     key={kpi}
                     value={kpi}
-                    className={itemClass}
+                    className={optionClass}
                     title={kpi}
                   >
                     {kpi}
@@ -203,12 +203,12 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 <SelectValue placeholder="เลือกตัวชี้วัดย่อย" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
+                <SelectItem value="all" className={optionClass}>ทั้งหมด</SelectItem>
                 {uniqueSubKPIs.map(kpi => (
                   <SelectItem
                     key={kpi}
                     value={kpi}
-                    className={itemClass}
+                    className={optionClass}
                     title={kpi}
                   >
                     {kpi}
@@ -230,12 +230,12 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 <SelectValue placeholder="เลือกกลุ่มเป้าหมาย" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
+                <SelectItem value="all" className={optionClass}>ทั้งหมด</SelectItem>
                 {uniqueTargets.map(target => (
                   <SelectItem
                     key={target}
                     value={target}
-                    className={itemClass}
+                    className={optionClass}
                     title={target}
                   >
                     {target}
@@ -257,12 +257,12 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 <SelectValue placeholder="เลือกหน่วยบริการ" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
+                <SelectItem value="all" className={optionClass}>ทั้งหมด</SelectItem>
                 {uniqueServices.map(service => (
                   <SelectItem
                     key={service}
                     value={service}
-                    className={itemClass}
+                    className={optionClass}
                     title={service}
                   >
                     {service}

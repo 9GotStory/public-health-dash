@@ -135,7 +135,6 @@ export const KPIDetailTable = ({
                           const sheetSource =
                             record.sheet_source?.trim() ||
                             (record as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
-
                           return (
                             <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
                               <td className="p-3">

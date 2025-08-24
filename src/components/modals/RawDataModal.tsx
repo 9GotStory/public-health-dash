@@ -49,27 +49,27 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
   const handleExport = () => {
     if (filteredData.length === 0) return;
 
-    const csv = [
-      headers.join(','),
-      ...filteredData.map(row => 
-        headers.map(header => {
-          const value = row[header]?.toString() || '';
-          return value.includes(',') ? `"${value}"` : value;
-        }).join(',')
+    const tableHeader = headers.map(h => `<th>${h}</th>`).join('');
+    const tableRows = filteredData
+      .map(row =>
+        `<tr>${headers
+          .map(h => `<td>${row[h] ?? ''}</td>`)
+          .join('')}</tr>`
       )
-    ].join('\n');
+      .join('');
+    const html = `<table><thead><tr>${tableHeader}</tr></thead><tbody>${tableRows}</tbody></table>`;
 
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\uFEFF' + html], { type: 'application/vnd.ms-excel' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `${sheetSource}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `${sheetSource}_${new Date().toISOString().split('T')[0]}.xls`;
     link.click();
   };
 
   if (loading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl max-h-[90vh]">
+        <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)]">
           <DialogHeader className="sr-only">
             <DialogTitle>กำลังโหลดข้อมูล</DialogTitle>
             <DialogDescription>กำลังโหลดข้อมูลดิบ</DialogDescription>
@@ -86,7 +86,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
   if (error) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)]">
           <DialogHeader className="sr-only">
             <DialogTitle>เกิดข้อผิดพลาด</DialogTitle>
             <DialogDescription>{error}</DialogDescription>
@@ -106,7 +106,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[90vh] p-0">
+      <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)] p-0 flex flex-col">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl font-bold flex items-center">
             <Database className="h-5 w-5 mr-2" />
@@ -155,14 +155,14 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
               </Badge>
               <Button variant="outline" size="sm" onClick={handleExport}>
                 <Download className="h-4 w-4 mr-1" />
-                Export CSV
+                Export Excel
               </Button>
             </div>
           </div>
         </div>
 
         {/* Data Table */}
-        <ScrollArea className="h-[calc(90vh-16rem)] px-6">
+        <ScrollArea className="flex-1 px-6">
           {filteredData.length > 0 ? (
             <div className="pb-6">
               <div className="border rounded-lg overflow-hidden">

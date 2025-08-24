@@ -206,7 +206,8 @@ export const KPIDetailTable = ({
                     </div>
                   )}
                 </div>
-              ))}
+              );
+            })}
             </div>
           </Card>
         ))}

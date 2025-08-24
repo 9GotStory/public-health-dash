@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RotateCcw, Filter, X } from "lucide-react";
+
 import { KPIRecord, FilterState } from "@/types/kpi";
 
 interface FilterPanelProps {
@@ -96,6 +97,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
       return;
     }
     handleFilterChange(key, "all");
+
   };
 
   const resetFilters = () => {
@@ -153,6 +155,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               </SelectTrigger>
               <SelectContent className="bg-white">
                 <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
+
                 {uniqueGroups.map(group => (
                   <SelectItem key={group} value={group} className={itemClass}>{group}</SelectItem>
                 ))}
@@ -171,8 +174,10 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               <SelectTrigger>
                 <SelectValue placeholder="เลือกตัวชี้วัดหลัก" />
               </SelectTrigger>
+
               <SelectContent className="bg-white">
                 <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
+
                 {uniqueMainKPIs.map(kpi => (
                   <SelectItem key={kpi} value={kpi} className={itemClass}>{kpi}</SelectItem>
                 ))}
@@ -191,8 +196,10 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               <SelectTrigger>
                 <SelectValue placeholder="เลือกตัวชี้วัดย่อย" />
               </SelectTrigger>
+
               <SelectContent className="bg-white">
                 <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
+
                 {uniqueSubKPIs.map(kpi => (
                   <SelectItem key={kpi} value={kpi} className={itemClass}>{kpi}</SelectItem>
                 ))}
@@ -211,8 +218,10 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               <SelectTrigger>
                 <SelectValue placeholder="เลือกกลุ่มเป้าหมาย" />
               </SelectTrigger>
+
               <SelectContent className="bg-white">
                 <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
+
                 {uniqueTargets.map(target => (
                   <SelectItem key={target} value={target} className={itemClass}>{target}</SelectItem>
                 ))}
@@ -233,6 +242,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               </SelectTrigger>
               <SelectContent className="bg-white">
                 <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
+
                 {uniqueServices.map(service => (
                   <SelectItem key={service} value={service} className={itemClass}>{service}</SelectItem>
                 ))}
@@ -345,6 +355,21 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 <span>สถานะ: ไม่ผ่าน</span>
                 <X className="h-3 w-3" />
               </button>
+            )}
+            {filters.statusFilters.includes('passed') && (
+              <span className="px-3 py-1 bg-success/10 text-success text-sm rounded-full">
+                สถานะ: ผ่าน
+              </span>
+            )}
+            {filters.statusFilters.includes('near') && (
+              <span className="px-3 py-1 bg-warning/10 text-warning text-sm rounded-full">
+                สถานะ: ใกล้เป้า
+              </span>
+            )}
+            {filters.statusFilters.includes('failed') && (
+              <span className="px-3 py-1 bg-destructive/10 text-destructive text-sm rounded-full">
+                สถานะ: ไม่ผ่าน
+              </span>
             )}
           </div>
         </div>

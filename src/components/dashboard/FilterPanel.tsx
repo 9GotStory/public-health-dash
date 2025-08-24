@@ -22,6 +22,9 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
   const [isExpanded, setIsExpanded] = useState(false);
   const itemClass = "whitespace-normal break-words line-clamp-2";
 
+
+  const itemClass = "whitespace-normal break-words line-clamp-2";
+
   // Build cascading filter options based on current selections
   const filteredByGroup = filters.selectedGroup
     ? data.filter(item => item['ประเด็นขับเคลื่อน'] === filters.selectedGroup)

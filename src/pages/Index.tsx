@@ -7,9 +7,53 @@ import { KPIGroupCards } from "@/components/dashboard/KPIGroupCards";
 import { KPIDetailTable } from "@/components/dashboard/KPIDetailTable";
 import { KPIInfoModal } from "@/components/modals/KPIInfoModal";
 import { RawDataModal } from "@/components/modals/RawDataModal";
-import { FilterState, KPIRecord } from "@/types/kpi";
+import { FilterState, KPIRecord, SummaryStats } from "@/types/kpi";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+
+const calculateSummary = (data: KPIRecord[]): SummaryStats => {
+  const summary: SummaryStats = {
+    totalKPIs: data.length,
+    averagePercentage: 0,
+    passedKPIs: 0,
+    failedKPIs: 0,
+    groupStats: {}
+  };
+
+  data.forEach(item => {
+    const percentage = parseFloat(item['ร้อยละ (%)']?.toString() || '0');
+    const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']?.toString() || '0');
+    const passed = percentage >= threshold;
+
+    if (passed) summary.passedKPIs++; else summary.failedKPIs++;
+    summary.averagePercentage += percentage;
+
+    const group = item['ประเด็นขับเคลื่อน'];
+    if (!summary.groupStats[group]) {
+      summary.groupStats[group] = {
+        count: 0,
+        totalPercentage: 0,
+        passed: 0,
+        failed: 0,
+        averagePercentage: 0
+      };
+    }
+    const g = summary.groupStats[group];
+    g.count++;
+    g.totalPercentage += percentage;
+    if (passed) g.passed++; else g.failed++;
+  });
+
+  Object.values(summary.groupStats).forEach(g => {
+    g.averagePercentage = g.count > 0 ? g.totalPercentage / g.count : 0;
+  });
+
+  summary.averagePercentage = summary.totalKPIs > 0
+    ? summary.averagePercentage / summary.totalKPIs
+    : 0;
+
+  return summary;
+};
 
 const Index = () => {
   const { allData, loading, error, refetch } = useKPIData();
@@ -36,56 +80,57 @@ const Index = () => {
   };
   const [filters, setFilters] = useState<FilterState>(initialFilters);
 
-  // Filter data based on current filters
-  const filterData = (data: KPIRecord[]) => {
-    const groupStatusMap: Record<string, string> = Object.entries(allData.summary.groupStats).reduce((acc, [group, stats]) => {
-      const avg = stats?.averagePercentage || 0;
-      const status = avg >= 80 ? 'passed' : avg >= 60 ? 'near' : 'failed';
-      acc[group] = status;
-      return acc;
-    }, {} as Record<string, string>);
-
+  // Apply cascading filters excluding status
+  const applyBasicFilters = (data: KPIRecord[]) => {
     return data.filter(item => {
       const matchesGroup = !filters.selectedGroup ||
         item['ประเด็นขับเคลื่อน'] === filters.selectedGroup;
-
       const matchesMainKPI = !filters.selectedMainKPI ||
         item['ตัวชี้วัดหลัก'] === filters.selectedMainKPI;
-
       const matchesSubKPI = !filters.selectedSubKPI ||
         item['ตัวชี้วัดย่อย'] === filters.selectedSubKPI;
-
       const matchesTarget = !filters.selectedTarget ||
         item['กลุ่มเป้าหมาย'] === filters.selectedTarget;
-
       const matchesService = !filters.selectedService ||
         item['ชื่อหน่วยบริการ'] === filters.selectedService;
-
-      let matchesStatus = true;
-      if (filters.statusFilters.length > 0) {
-        if (currentView === 'groups') {
-          const groupStatus = groupStatusMap[item['ประเด็นขับเคลื่อน']] || 'failed';
-          matchesStatus = filters.statusFilters.includes(groupStatus);
-        } else {
-          const percentage = parseFloat(item['ร้อยละ (%)']?.toString() || '0');
-          const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']?.toString() || '0');
-          const status = percentage >= threshold
-            ? 'passed'
-            : percentage >= threshold * 0.8
-              ? 'near'
-              : 'failed';
-          matchesStatus = filters.statusFilters.includes(status);
-        }
-      }
-
       return (
         matchesGroup &&
         matchesMainKPI &&
         matchesSubKPI &&
         matchesTarget &&
-        matchesService &&
-        matchesStatus
+        matchesService
       );
+    });
+  };
+
+  // Apply status filters based on current view
+  const applyStatusFilter = (data: KPIRecord[]) => {
+    if (filters.statusFilters.length === 0) return data;
+
+    if (currentView === 'groups') {
+      const groupStats = calculateSummary(data).groupStats;
+      const groupStatusMap: Record<string, string> = Object.entries(groupStats).reduce((acc, [group, stats]) => {
+        const avg = stats?.averagePercentage || 0;
+        const status = avg >= 80 ? 'passed' : avg >= 60 ? 'near' : 'failed';
+        acc[group] = status;
+        return acc;
+      }, {} as Record<string, string>);
+
+      return data.filter(item => {
+        const status = groupStatusMap[item['ประเด็นขับเคลื่อน']] || 'failed';
+        return filters.statusFilters.includes(status);
+      });
+    }
+
+    return data.filter(item => {
+      const percentage = parseFloat(item['ร้อยละ (%)']?.toString() || '0');
+      const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']?.toString() || '0');
+      const status = percentage >= threshold
+        ? 'passed'
+        : percentage >= threshold * 0.8
+          ? 'near'
+          : 'failed';
+      return filters.statusFilters.includes(status);
     });
   };
 
@@ -151,14 +196,16 @@ const Index = () => {
     );
   }
 
-  const filteredData = filterData(allData.configuration);
+  const basicFilteredData = applyBasicFilters(allData.configuration);
+  const filteredData = applyStatusFilter(basicFilteredData);
+  const filteredSummary = calculateSummary(filteredData);
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Dashboard Header */}
-        <DashboardHeader 
-          summary={allData.summary} 
+        <DashboardHeader
+          summary={filteredSummary}
           lastUpdate={allData.metadata?.lastUpdate}
         />
 
@@ -171,9 +218,9 @@ const Index = () => {
 
         {/* Main Content */}
         {currentView === 'groups' ? (
-          <KPIGroupCards 
+          <KPIGroupCards
             data={filteredData}
-            summary={allData.summary}
+            summary={filteredSummary}
             onGroupClick={handleGroupClick}
           />
         ) : (

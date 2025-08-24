@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowUpDown, ChevronLeft, Info, Database, Calendar, Building2 } from "lucide-react";
 import { KPIRecord } from "@/types/kpi";
+import { calculatePercentage } from "@/lib/kpi";
 
 interface KPIDetailTableProps {
   data: KPIRecord[];
@@ -53,9 +54,10 @@ export const KPIDetailTable = ({
     return isNaN(num) ? value : num.toLocaleString();
   };
 
-  const formatPercentage = (value: string | number) => {
+  const formatPercentage = (value: string | number | null | undefined) => {
+    if (value === null || value === undefined || value === '') return '';
     const num = typeof value === 'string' ? parseFloat(value) : value;
-    return isNaN(num) ? value : `${num.toFixed(2)}%`;
+    return isNaN(num) ? '' : `${num.toFixed(2)}%`;
   };
 
   return (
@@ -127,7 +129,7 @@ export const KPIDetailTable = ({
                       </thead>
                       <tbody>
                         {records.map((record, index) => {
-                          const percentage = parseFloat(record['ร้อยละ (%)']?.toString() || '0');
+                          const percentage = calculatePercentage(record);
                           const threshold = parseFloat(record['เกณฑ์ผ่าน (%)']?.toString() || '0');
                           
                           return (
@@ -148,14 +150,14 @@ export const KPIDetailTable = ({
                               <td className="p-3 text-right">
                                 <div className="space-y-1">
                                   <div className="font-semibold">{formatPercentage(percentage)}</div>
-                                  <Progress value={Math.min(percentage, 100)} className="h-1.5" />
+                                  <Progress value={Math.min(percentage ?? 0, 100)} className="h-1.5" />
                                 </div>
                               </td>
                               <td className="p-3 text-right font-mono text-muted-foreground">
                                 {formatPercentage(threshold)}
                               </td>
                               <td className="p-3 text-center">
-                                {getStatusBadge(percentage, threshold)}
+                                {percentage !== null ? getStatusBadge(percentage, threshold) : '-'}
                               </td>
                               <td className="p-3">
                                 <div className="flex space-x-1 justify-center">

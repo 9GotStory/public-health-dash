@@ -21,7 +21,7 @@ interface FilterPanelProps {
 export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const itemClass = "whitespace-normal break-words";
+  const itemClass = "whitespace-normal break-words line-clamp-2";
 
   // Build cascading filter options based on current selections
   const filteredByGroup = filters.selectedGroup
@@ -154,7 +154,14 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               <SelectContent className="bg-white">
                 <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
                 {uniqueGroups.map(group => (
-                  <SelectItem key={group} value={group} className={itemClass}>{group}</SelectItem>
+                  <SelectItem
+                    key={group}
+                    value={group}
+                    className={itemClass}
+                    title={group}
+                  >
+                    {group}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -174,7 +181,14 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               <SelectContent className="bg-white">
                 <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
                 {uniqueMainKPIs.map(kpi => (
-                  <SelectItem key={kpi} value={kpi} className={itemClass}>{kpi}</SelectItem>
+                  <SelectItem
+                    key={kpi}
+                    value={kpi}
+                    className={itemClass}
+                    title={kpi}
+                  >
+                    {kpi}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -194,7 +208,14 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               <SelectContent className="bg-white">
                 <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
                 {uniqueSubKPIs.map(kpi => (
-                  <SelectItem key={kpi} value={kpi} className={itemClass}>{kpi}</SelectItem>
+                  <SelectItem
+                    key={kpi}
+                    value={kpi}
+                    className={itemClass}
+                    title={kpi}
+                  >
+                    {kpi}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -214,7 +235,14 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               <SelectContent className="bg-white">
                 <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
                 {uniqueTargets.map(target => (
-                  <SelectItem key={target} value={target} className={itemClass}>{target}</SelectItem>
+                  <SelectItem
+                    key={target}
+                    value={target}
+                    className={itemClass}
+                    title={target}
+                  >
+                    {target}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -234,7 +262,14 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               <SelectContent className="bg-white">
                 <SelectItem value="all" className={itemClass}>ทั้งหมด</SelectItem>
                 {uniqueServices.map(service => (
-                  <SelectItem key={service} value={service} className={itemClass}>{service}</SelectItem>
+                  <SelectItem
+                    key={service}
+                    value={service}
+                    className={itemClass}
+                    title={service}
+                  >
+                    {service}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

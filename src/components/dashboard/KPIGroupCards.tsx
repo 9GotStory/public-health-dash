@@ -1,7 +1,30 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, Brain, Pill, Ribbon, Target, TrendingUp } from "lucide-react";
+import {
+  ChevronRight,
+  Brain,
+  Pill,
+  Ribbon,
+  Activity,
+  HeartPulse,
+  Shield,
+  Star,
+  Users,
+  Leaf,
+  Flame,
+  Droplet,
+  Sun,
+  Moon,
+  Book,
+  Cloud,
+  Compass,
+  Anchor,
+  Zap,
+  Target,
+  TrendingUp
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { KPIRecord, SummaryStats } from "@/types/kpi";
 
 interface KPIGroupCardsProps {
@@ -19,17 +42,41 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
     return acc;
   }, {} as Record<string, KPIRecord[]>);
 
-  const getGroupIcon = (groupName: string) => {
+  const fallbackIcons: LucideIcon[] = [
+    Activity,
+    HeartPulse,
+    Shield,
+    Star,
+    Users,
+    Leaf,
+    Flame,
+    Droplet,
+    Sun,
+    Moon,
+    Book,
+    Cloud,
+    Compass,
+    Anchor,
+    Zap,
+  ];
+
+  const iconMap = new Map<string, LucideIcon>();
+
+  const getGroupIcon = (groupName: string): LucideIcon => {
     if (groupName.includes('สุขภาพจิต')) {
-      return <Brain className="h-6 w-6" />;
+      return Brain;
     }
     if (groupName.includes('ยาเสพติด')) {
-      return <Pill className="h-6 w-6" />;
+      return Pill;
     }
     if (groupName.includes('มะเร็ง')) {
-      return <Ribbon className="h-6 w-6" />;
+      return Ribbon;
     }
-    return <Target className="h-6 w-6" />;
+    if (!iconMap.has(groupName)) {
+      const Icon = fallbackIcons[iconMap.size % fallbackIcons.length];
+      iconMap.set(groupName, Icon);
+    }
+    return iconMap.get(groupName)!;
   };
 
   const getStatusColor = (percentage: number) => {
@@ -48,17 +95,18 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
           const averagePercentage = groupStats?.averagePercentage || 0;
           const passedCount = groupStats?.passed || 0;
           const totalCount = groupStats?.count ?? 0;
-          
+          const IconComponent = getGroupIcon(groupName);
+
           return (
-            <Card 
-              key={groupName} 
+            <Card
+              key={groupName}
               className="p-6 hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-primary"
               onClick={() => onGroupClick(groupName)}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                    {getGroupIcon(groupName)}
+                    <IconComponent className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors">

@@ -9,7 +9,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RotateCcw, Filter, X } from "lucide-react";
+import { RotateCcw, Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { KPIRecord, FilterState } from "@/types/kpi";
 
 interface FilterPanelProps {
@@ -124,12 +124,17 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               ล้างตัวกรอง
             </Button>
           )}
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
+            aria-label={isExpanded ? 'ย่อ' : 'ขยาย'}
           >
-            {isExpanded ? 'ย่อ' : 'ขยาย'}
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>

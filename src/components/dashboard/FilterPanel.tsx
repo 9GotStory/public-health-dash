@@ -52,13 +52,13 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
   ];
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
+    const normalizedValue = value === 'all' ? '' : value;
     const updated: FilterState = {
       ...filters,
-      [key]: value
+      [key]: normalizedValue
     };
 
     // Reset dependent filters when parent selection changes
-
     if (key === "selectedGroup") {
       updated.selectedMainKPI = "";
       updated.selectedSubKPI = "";
@@ -142,7 +142,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 <SelectValue placeholder="เลือกประเด็นขับเคลื่อน" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">ทั้งหมด</SelectItem>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
                 {uniqueGroups.map(group => (
                   <SelectItem key={group} value={group}>{group}</SelectItem>
                 ))}
@@ -162,7 +162,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 <SelectValue placeholder="เลือกตัวชี้วัดหลัก" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">ทั้งหมด</SelectItem>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
                 {uniqueMainKPIs.map(kpi => (
                   <SelectItem key={kpi} value={kpi}>{kpi}</SelectItem>
                 ))}
@@ -182,7 +182,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 <SelectValue placeholder="เลือกตัวชี้วัดย่อย" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">ทั้งหมด</SelectItem>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
                 {uniqueSubKPIs.map(kpi => (
                   <SelectItem key={kpi} value={kpi}>{kpi}</SelectItem>
                 ))}
@@ -202,7 +202,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 <SelectValue placeholder="เลือกกลุ่มเป้าหมาย" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">ทั้งหมด</SelectItem>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
                 {uniqueTargets.map(target => (
                   <SelectItem key={target} value={target}>{target}</SelectItem>
                 ))}
@@ -222,7 +222,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 <SelectValue placeholder="เลือกหน่วยบริการ" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">ทั้งหมด</SelectItem>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
                 {uniqueServices.map(service => (
                   <SelectItem key={service} value={service}>{service}</SelectItem>
                 ))}

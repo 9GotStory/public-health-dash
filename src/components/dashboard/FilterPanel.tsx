@@ -20,6 +20,8 @@ interface FilterPanelProps {
 
 export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const itemClass = "whitespace-normal break-words line-clamp-2";
+
 
   const itemClass = "whitespace-normal break-words line-clamp-2";
 

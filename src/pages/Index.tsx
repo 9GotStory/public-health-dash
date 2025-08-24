@@ -38,32 +38,45 @@ const Index = () => {
 
   // Filter data based on current filters
   const filterData = (data: KPIRecord[]) => {
+    const groupStatusMap: Record<string, string> = Object.entries(allData.summary.groupStats).reduce((acc, [group, stats]) => {
+      const avg = stats?.averagePercentage || 0;
+      const status = avg >= 80 ? 'passed' : avg >= 60 ? 'near' : 'failed';
+      acc[group] = status;
+      return acc;
+    }, {} as Record<string, string>);
+
     return data.filter(item => {
       const matchesGroup = !filters.selectedGroup ||
         item['ประเด็นขับเคลื่อน'] === filters.selectedGroup;
-      
-      const matchesMainKPI = !filters.selectedMainKPI || 
+
+      const matchesMainKPI = !filters.selectedMainKPI ||
         item['ตัวชี้วัดหลัก'] === filters.selectedMainKPI;
-      
-      const matchesSubKPI = !filters.selectedSubKPI || 
+
+      const matchesSubKPI = !filters.selectedSubKPI ||
         item['ตัวชี้วัดย่อย'] === filters.selectedSubKPI;
-      
-      const matchesTarget = !filters.selectedTarget || 
+
+      const matchesTarget = !filters.selectedTarget ||
         item['กลุ่มเป้าหมาย'] === filters.selectedTarget;
-      
+
       const matchesService = !filters.selectedService ||
         item['ชื่อหน่วยบริการ'] === filters.selectedService;
 
-      const percentage = parseFloat(item['ร้อยละ (%)']?.toString() || '0');
-      const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']?.toString() || '0');
-      const status = percentage >= threshold
-        ? 'passed'
-        : percentage >= threshold * 0.8
-          ? 'near'
-          : 'failed';
-      const matchesStatus =
-        filters.statusFilters.length === 0 ||
-        filters.statusFilters.includes(status);
+      let matchesStatus = true;
+      if (filters.statusFilters.length > 0) {
+        if (currentView === 'groups') {
+          const groupStatus = groupStatusMap[item['ประเด็นขับเคลื่อน']] || 'failed';
+          matchesStatus = filters.statusFilters.includes(groupStatus);
+        } else {
+          const percentage = parseFloat(item['ร้อยละ (%)']?.toString() || '0');
+          const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']?.toString() || '0');
+          const status = percentage >= threshold
+            ? 'passed'
+            : percentage >= threshold * 0.8
+              ? 'near'
+              : 'failed';
+          matchesStatus = filters.statusFilters.includes(status);
+        }
+      }
 
       return (
         matchesGroup &&

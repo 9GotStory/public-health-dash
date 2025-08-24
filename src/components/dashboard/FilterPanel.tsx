@@ -20,8 +20,6 @@ interface FilterPanelProps {
 
 export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-
-
   const itemClass = "whitespace-normal break-words line-clamp-2";
 
   // Build cascading filter options based on current selections
@@ -51,7 +49,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
     ...new Set(filteredBySubKPI.map(item => item['กลุ่มเป้าหมาย']).filter(Boolean))
   ];
   const uniqueServices = [
-    ...new Set(filteredByTarget.map(item => item['ชื่อหน่วยบริการ']).filter(Boolean))
+    ...new Set(data.map(item => item['ชื่อหน่วยบริการ']).filter(Boolean))
   ];
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
@@ -66,16 +64,11 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
       updated.selectedMainKPI = "";
       updated.selectedSubKPI = "";
       updated.selectedTarget = "";
-      updated.selectedService = "";
     } else if (key === "selectedMainKPI") {
       updated.selectedSubKPI = "";
       updated.selectedTarget = "";
-      updated.selectedService = "";
     } else if (key === "selectedSubKPI") {
       updated.selectedTarget = "";
-      updated.selectedService = "";
-    } else if (key === "selectedTarget") {
-      updated.selectedService = "";
     }
 
     onFiltersChange(updated);

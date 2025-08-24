@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUpDown, ChevronLeft, Info, Database, Calendar, Building2 } from "lucide-react";
+import { ArrowUpDown, ChevronLeft, Info, Database, Calendar, Building2, Table as TableIcon } from "lucide-react";
 import { KPIRecord } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
 
@@ -12,7 +12,7 @@ interface KPIDetailTableProps {
   groupName?: string;
   onBack?: () => void;
   onKPIInfoClick: (kpiInfoId: string) => void;
-  onRawDataClick: (sheetSource: string, record: KPIRecord) => void;
+  onRawDataClick: (sheetSource: string, record?: KPIRecord) => void;
 }
 
 export const KPIDetailTable = ({ 
@@ -94,23 +94,38 @@ export const KPIDetailTable = ({
 
             {/* Sub KPI Groups */}
             <div className="space-y-6">
-              {Object.entries(subKPIGroups).map(([subKPI, records]) => (
-                <div key={subKPI} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-medium text-secondary-foreground">{subKPI}</h4>
-                    <div className="flex space-x-2">
-                      {records[0]?.kpi_info_id && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onKPIInfoClick(records[0].kpi_info_id)}
-                        >
-                          <Info className="h-4 w-4 mr-1" />
-                          รายละเอียด KPI
-                        </Button>
-                      )}
+              {Object.entries(subKPIGroups).map(([subKPI, records]) => {
+                const groupSheetSource =
+                  records[0]?.sheet_source?.trim() ||
+                  (records[0] as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
+
+                return (
+                  <div key={subKPI} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-medium text-secondary-foreground">{subKPI}</h4>
+                      <div className="flex space-x-2">
+                        {groupSheetSource && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onRawDataClick(groupSheetSource)}
+                          >
+                            <Database className="h-4 w-4 mr-1" />
+                            ข้อมูลทั้งหมด
+                          </Button>
+                        )}
+                        {records[0]?.kpi_info_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onKPIInfoClick(records[0].kpi_info_id)}
+                          >
+                            <Info className="h-4 w-4 mr-1" />
+                            รายละเอียด KPI
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
                   {/* Records Table */}
                   <div className="overflow-x-auto">
@@ -132,6 +147,9 @@ export const KPIDetailTable = ({
                           const percentage = calculatePercentage(record);
                           const threshold = parseFloat(record['เกณฑ์ผ่าน (%)']?.toString() || '0');
                           const hasResult = record['ผลงาน']?.toString().trim() !== '';
+                          const sheetSource =
+                            record.sheet_source?.trim() ||
+                            (record as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
 
                           return (
                             <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
@@ -162,14 +180,14 @@ export const KPIDetailTable = ({
                               </td>
                               <td className="p-3">
                                 <div className="flex space-x-1 justify-center">
-                                  {record.sheet_source && (
+                                  {sheetSource && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => onRawDataClick(record.sheet_source, record)}
-                                      title="ดูข้อมูลดิบ"
+                                      onClick={() => onRawDataClick(sheetSource, record)}
+                                      title="เฉพาะหน่วยนี้"
                                     >
-                                      <Database className="h-4 w-4" />
+                                      <TableIcon className="h-4 w-4" />
                                     </Button>
                                   )}
                                 </div>

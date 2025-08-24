@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, RotateCcw, Filter } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RotateCcw, Filter } from "lucide-react";
 import { KPIRecord, FilterState } from "@/types/kpi";
 
 interface FilterPanelProps {
@@ -52,37 +58,50 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
     };
 
     // Reset dependent filters when parent selection changes
-    if (key === 'selectedGroup') {
-      updated.selectedMainKPI = '';
-      updated.selectedSubKPI = '';
-      updated.selectedTarget = '';
-      updated.selectedService = '';
-    } else if (key === 'selectedMainKPI') {
-      updated.selectedSubKPI = '';
-      updated.selectedTarget = '';
-      updated.selectedService = '';
-    } else if (key === 'selectedSubKPI') {
-      updated.selectedTarget = '';
-      updated.selectedService = '';
-    } else if (key === 'selectedTarget') {
-      updated.selectedService = '';
+
+    if (key === "selectedGroup") {
+      updated.selectedMainKPI = "";
+      updated.selectedSubKPI = "";
+      updated.selectedTarget = "";
+      updated.selectedService = "";
+    } else if (key === "selectedMainKPI") {
+      updated.selectedSubKPI = "";
+      updated.selectedTarget = "";
+      updated.selectedService = "";
+    } else if (key === "selectedSubKPI") {
+      updated.selectedTarget = "";
+      updated.selectedService = "";
+    } else if (key === "selectedTarget") {
+      updated.selectedService = "";
     }
 
     onFiltersChange(updated);
   };
 
+  const handleStatusChange = (status: string, checked: boolean) => {
+    const updated: FilterState = {
+      ...filters,
+      statusFilters: checked
+        ? [...filters.statusFilters, status]
+        : filters.statusFilters.filter(s => s !== status)
+    };
+    onFiltersChange(updated);
+  };
+
   const resetFilters = () => {
     onFiltersChange({
-      searchTerm: '',
-      selectedGroup: '',
-      selectedMainKPI: '',
-      selectedSubKPI: '',
-      selectedTarget: '',
-      selectedService: ''
+      selectedGroup: "",
+      selectedMainKPI: "",
+      selectedSubKPI: "",
+      selectedTarget: "",
+      selectedService: "",
+      statusFilters: []
     });
   };
 
-  const hasActiveFilters = Object.values(filters).some(value => value !== '');
+  const hasActiveFilters = Object.values(filters).some(value =>
+    Array.isArray(value) ? value.length > 0 : value !== ""
+  );
 
   return (
     <Card className="p-6">
@@ -106,17 +125,6 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
             {isExpanded ? 'ย่อ' : 'ขยาย'}
           </Button>
         </div>
-      </div>
-
-      {/* Search Bar - Always visible */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          placeholder="ค้นหาตัวชี้วัด หน่วยบริการ หรือข้อมูลอื่นๆ..."
-          value={filters.searchTerm}
-          onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-          className="pl-10"
-        />
       </div>
 
       {/* Advanced Filters - Collapsible */}
@@ -206,9 +214,9 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
             <label className="text-sm font-medium text-foreground mb-2 block">
               หน่วยบริการ
             </label>
-            <Select 
-              value={filters.selectedService} 
-              onValueChange={(value) => handleFilterChange('selectedService', value)}
+            <Select
+              value={filters.selectedService}
+              onValueChange={(value) => handleFilterChange("selectedService", value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="เลือกหน่วยบริการ" />
@@ -220,6 +228,35 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              สถานะ
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center space-x-2">
+                <Checkbox
+                  checked={filters.statusFilters.includes('passed')}
+                  onCheckedChange={checked => handleStatusChange('passed', checked as boolean)}
+                />
+                <span>ผ่าน</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <Checkbox
+                  checked={filters.statusFilters.includes('near')}
+                  onCheckedChange={checked => handleStatusChange('near', checked as boolean)}
+                />
+                <span>ใกล้เป้า</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <Checkbox
+                  checked={filters.statusFilters.includes('failed')}
+                  onCheckedChange={checked => handleStatusChange('failed', checked as boolean)}
+                />
+                <span>ไม่ผ่าน</span>
+              </label>
+            </div>
           </div>
         </div>
       )}
@@ -250,6 +287,21 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
             {filters.selectedService && (
               <span className="px-3 py-1 bg-muted text-muted-foreground text-sm rounded-full">
                 หน่วยบริการ: {filters.selectedService}
+              </span>
+            )}
+            {filters.statusFilters.includes('passed') && (
+              <span className="px-3 py-1 bg-success/10 text-success text-sm rounded-full">
+                สถานะ: ผ่าน
+              </span>
+            )}
+            {filters.statusFilters.includes('near') && (
+              <span className="px-3 py-1 bg-warning/10 text-warning text-sm rounded-full">
+                สถานะ: ใกล้เป้า
+              </span>
+            )}
+            {filters.statusFilters.includes('failed') && (
+              <span className="px-3 py-1 bg-destructive/10 text-destructive text-sm rounded-full">
+                สถานะ: ไม่ผ่าน
               </span>
             )}
           </div>

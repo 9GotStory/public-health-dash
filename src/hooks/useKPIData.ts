@@ -46,7 +46,7 @@ export const useKPIData = () => {
 };
 
 export const useKPIInfo = (groupName?: string, kpiInfoId?: string) => {
-  const [kpiInfo, setKpiInfo] = useState<any>(null);
+  const [kpiInfo, setKpiInfo] = useState<KPIInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,7 +69,7 @@ export const useKPIInfo = (groupName?: string, kpiInfoId?: string) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const result: APIResponse<any> = await response.json();
+      const result: APIResponse<KPIInfo> = await response.json();
       
       if (result.status === 'error') {
         throw new Error(result.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล KPI Info');
@@ -97,7 +97,7 @@ export const useKPIInfo = (groupName?: string, kpiInfoId?: string) => {
 };
 
 export const useSourceData = () => {
-  const [sourceData, setSourceData] = useState<any[]>([]);
+  const [sourceData, setSourceData] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,13 +113,16 @@ export const useSourceData = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const result: APIResponse<any[]> = await response.json();
-      
-      if (result.status === 'error') {
-        throw new Error(result.message || 'เกิดข้อผิดพลาดในการดึงข้อมูลต้นฉบับ');
-      }
-      
-      setSourceData(result.data || []);
+        const result: APIResponse<Record<string, unknown>[]> = await response.json();
+        if (result.status === 'error') {
+          throw new Error(result.message || 'เกิดข้อผิดพลาดในการดึงข้อมูลต้นฉบับ');
+        }
+
+        if (!Array.isArray(result.data)) {
+          throw new Error('รูปแบบข้อมูลต้นฉบับไม่ถูกต้อง');
+        }
+
+        setSourceData(result.data);
     } catch (err) {
       console.error('Error fetching source data:', err);
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการดึงข้อมูลต้นฉบับ');

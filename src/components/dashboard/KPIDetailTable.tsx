@@ -132,8 +132,9 @@ export const KPIDetailTable = ({
                           const percentage = calculatePercentage(record);
                           const threshold = parseFloat(record['เกณฑ์ผ่าน (%)']?.toString() || '0');
                           const hasResult = record['ผลงาน']?.toString().trim() !== '';
-                          const sheetSource = record.sheet_source || (record as Record<string, string | undefined>)['แหล่งข้อมูล'];
-
+                          const sheetSource =
+                            record.sheet_source?.trim() ||
+                            (record as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
                           return (
                             <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
                               <td className="p-3">

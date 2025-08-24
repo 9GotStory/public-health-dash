@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { KPIData, KPIRecord, KPIInfo, APIResponse } from '@/types/kpi';
 
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec';
@@ -46,7 +46,7 @@ export const useKPIData = () => {
 };
 
 export const useKPIInfo = (groupName?: string, kpiInfoId?: string) => {
-  const [kpiInfo, setKpiInfo] = useState<any>(null);
+  const [kpiInfo, setKpiInfo] = useState<KPIInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,7 +69,7 @@ export const useKPIInfo = (groupName?: string, kpiInfoId?: string) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const result: APIResponse<any> = await response.json();
+      const result: APIResponse<KPIInfo> = await response.json();
       
       if (result.status === 'error') {
         throw new Error(result.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล KPI Info');
@@ -97,41 +97,45 @@ export const useKPIInfo = (groupName?: string, kpiInfoId?: string) => {
 };
 
 export const useSourceData = () => {
-  const [sourceData, setSourceData] = useState<any[]>([]);
+  const [sourceData, setSourceData] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSourceData = async (sheetName: string) => {
+  const fetchSourceData = useCallback(async (sheetName: string) => {
     if (!sheetName) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+      setSourceData([]);
+
       const response = await fetch(`${API_BASE_URL}?action=getSourceSheetData&param=${encodeURIComponent(sheetName)}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      const result: APIResponse<any[]> = await response.json();
-      
+
+      const result: APIResponse<Record<string, unknown>[]> = await response.json();
       if (result.status === 'error') {
         throw new Error(result.message || 'เกิดข้อผิดพลาดในการดึงข้อมูลต้นฉบับ');
       }
-      
-      setSourceData(result.data || []);
+
+      if (!Array.isArray(result.data)) {
+        throw new Error('รูปแบบข้อมูลต้นฉบับไม่ถูกต้อง');
+      }
+
+      setSourceData(result.data);
     } catch (err) {
       console.error('Error fetching source data:', err);
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการดึงข้อมูลต้นฉบับ');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return {
     sourceData,
     loading,
     error,
-    fetchSourceData
+    fetchSourceData,
   };
 };

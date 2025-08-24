@@ -110,6 +110,7 @@ export const KPIDetailTable = ({
                             onClick={() => onRawDataClick(groupSheetSource)}
                           >
                             <i className="fa-solid fa-table-list mr-1"></i>
+
                             ข้อมูลทั้งหมด
                           </Button>
                         )}
@@ -216,6 +217,7 @@ export const KPIDetailTable = ({
         <Card className="p-8 text-center">
           <div className="text-muted-foreground">
             <i className="fa-solid fa-circle-exclamation text-6xl mx-auto mb-4 opacity-50"></i>
+
             <p className="text-lg">ไม่พบข้อมูลตัวชี้วัดที่ตรงกับเงื่อนไข</p>
           </div>
         </Card>

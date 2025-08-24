@@ -15,18 +15,60 @@ interface FilterPanelProps {
 export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Extract unique values for filter options
-  const uniqueGroups = [...new Set(data.map(item => item['ประเด็นขับเคลื่อน']).filter(Boolean))];
-  const uniqueMainKPIs = [...new Set(data.map(item => item['ตัวชี้วัดหลัก']).filter(Boolean))];
-  const uniqueSubKPIs = [...new Set(data.map(item => item['ตัวชี้วัดย่อย']).filter(Boolean))];
-  const uniqueTargets = [...new Set(data.map(item => item['กลุ่มเป้าหมาย']).filter(Boolean))];
-  const uniqueServices = [...new Set(data.map(item => item['ชื่อหน่วยบริการ']).filter(Boolean))];
+  // Build cascading filter options based on current selections
+  const filteredByGroup = filters.selectedGroup
+    ? data.filter(item => item['ประเด็นขับเคลื่อน'] === filters.selectedGroup)
+    : data;
+  const filteredByMainKPI = filters.selectedMainKPI
+    ? filteredByGroup.filter(item => item['ตัวชี้วัดหลัก'] === filters.selectedMainKPI)
+    : filteredByGroup;
+  const filteredBySubKPI = filters.selectedSubKPI
+    ? filteredByMainKPI.filter(item => item['ตัวชี้วัดย่อย'] === filters.selectedSubKPI)
+    : filteredByMainKPI;
+  const filteredByTarget = filters.selectedTarget
+    ? filteredBySubKPI.filter(item => item['กลุ่มเป้าหมาย'] === filters.selectedTarget)
+    : filteredBySubKPI;
+
+  const uniqueGroups = [
+    ...new Set(data.map(item => item['ประเด็นขับเคลื่อน']).filter(Boolean))
+  ];
+  const uniqueMainKPIs = [
+    ...new Set(filteredByGroup.map(item => item['ตัวชี้วัดหลัก']).filter(Boolean))
+  ];
+  const uniqueSubKPIs = [
+    ...new Set(filteredByMainKPI.map(item => item['ตัวชี้วัดย่อย']).filter(Boolean))
+  ];
+  const uniqueTargets = [
+    ...new Set(filteredBySubKPI.map(item => item['กลุ่มเป้าหมาย']).filter(Boolean))
+  ];
+  const uniqueServices = [
+    ...new Set(filteredByTarget.map(item => item['ชื่อหน่วยบริการ']).filter(Boolean))
+  ];
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
-    onFiltersChange({
+    const updated: FilterState = {
       ...filters,
       [key]: value
-    });
+    };
+
+    // Reset dependent filters when parent selection changes
+    if (key === 'selectedGroup') {
+      updated.selectedMainKPI = '';
+      updated.selectedSubKPI = '';
+      updated.selectedTarget = '';
+      updated.selectedService = '';
+    } else if (key === 'selectedMainKPI') {
+      updated.selectedSubKPI = '';
+      updated.selectedTarget = '';
+      updated.selectedService = '';
+    } else if (key === 'selectedSubKPI') {
+      updated.selectedTarget = '';
+      updated.selectedService = '';
+    } else if (key === 'selectedTarget') {
+      updated.selectedService = '';
+    }
+
+    onFiltersChange(updated);
   };
 
   const resetFilters = () => {

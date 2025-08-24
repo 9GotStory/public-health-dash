@@ -1,4 +1,10 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +38,10 @@ export const KPIInfoModal = ({ isOpen, onClose, kpiInfo, loading }: KPIInfoModal
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>กำลังโหลดข้อมูล</DialogTitle>
+            <DialogDescription>กำลังโหลดรายละเอียดตัวชี้วัด</DialogDescription>
+          </DialogHeader>
           <div className="flex items-center justify-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <span className="ml-3">กำลังโหลดข้อมูล...</span>
@@ -45,6 +55,12 @@ export const KPIInfoModal = ({ isOpen, onClose, kpiInfo, loading }: KPIInfoModal
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>ไม่พบข้อมูลรายละเอียด KPI</DialogTitle>
+            <DialogDescription>
+              ข้อมูลรายละเอียดของตัวชี้วัดนี้ไม่พร้อมใช้งาน
+            </DialogDescription>
+          </DialogHeader>
           <div className="text-center p-8">
             <AlertCircle className="h-12 w-12 text-warning mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">ไม่พบข้อมูลรายละเอียด KPI</h3>
@@ -102,6 +118,9 @@ export const KPIInfoModal = ({ isOpen, onClose, kpiInfo, loading }: KPIInfoModal
           <DialogTitle className="text-xl font-bold">
             รายละเอียดตัวชี้วัด: {kpiInfo['ตัวชี้วัดหลัก']}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            รายละเอียดตัวชี้วัด
+          </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="h-[calc(90vh-8rem)] px-6">

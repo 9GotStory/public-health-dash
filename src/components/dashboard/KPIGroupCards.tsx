@@ -44,7 +44,7 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
           const groupStats = summary.groupStats[groupName];
           const averagePercentage = groupStats?.averagePercentage || 0;
           const passedCount = groupStats?.passed || 0;
-          const totalCount = groupStats?.count || records.length;
+          const totalCount = groupStats?.count ?? 0;
           
           return (
             <Card 

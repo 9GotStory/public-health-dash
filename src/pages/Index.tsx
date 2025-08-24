@@ -10,10 +10,11 @@ import { RawDataModal } from "@/components/modals/RawDataModal";
 import { FilterState, KPIRecord, SummaryStats } from "@/types/kpi";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { calculatePercentage } from "@/lib/kpi";
 
 const calculateSummary = (data: KPIRecord[]): SummaryStats => {
   const summary: SummaryStats = {
-    totalKPIs: data.length,
+    totalKPIs: 0,
     averagePercentage: 0,
     passedKPIs: 0,
     failedKPIs: 0,
@@ -21,10 +22,12 @@ const calculateSummary = (data: KPIRecord[]): SummaryStats => {
   };
 
   data.forEach(item => {
-    const percentage = parseFloat(item['ร้อยละ (%)']?.toString() || '0');
+    const percentage = calculatePercentage(item);
+    if (percentage === null) return;
     const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']?.toString() || '0');
     const passed = percentage >= threshold;
 
+    summary.totalKPIs++;
     if (passed) summary.passedKPIs++; else summary.failedKPIs++;
     summary.averagePercentage += percentage;
 
@@ -117,13 +120,16 @@ const Index = () => {
       }, {} as Record<string, string>);
 
       return data.filter(item => {
-        const status = groupStatusMap[item['ประเด็นขับเคลื่อน']] || 'failed';
+        const status = groupStatusMap[item['ประเด็นขับเคลื่อน']];
+        if (!status) return false;
         return filters.statusFilters.includes(status);
       });
     }
 
     return data.filter(item => {
-      const percentage = parseFloat(item['ร้อยละ (%)']?.toString() || '0');
+      const percentage = calculatePercentage(item);
+      const resultRaw = item['ผลงาน']?.toString().trim();
+      if (percentage === null || !resultRaw) return false;
       const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']?.toString() || '0');
       const status = percentage >= threshold
         ? 'passed'

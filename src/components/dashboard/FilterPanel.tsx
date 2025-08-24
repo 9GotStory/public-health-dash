@@ -58,6 +58,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
     };
 
     // Reset dependent filters when parent selection changes
+
     if (key === "selectedGroup") {
       updated.selectedMainKPI = "";
       updated.selectedSubKPI = "";

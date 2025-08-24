@@ -29,8 +29,11 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
   // Filter data based on search term
   const filteredData = sourceData.filter(row => {
     if (!searchTerm) return true;
-    return Object.values(row).some(value => 
-      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    return Object.values(row).some(value =>
+      (value ?? '')
+        .toString()
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
     );
   });
 

@@ -178,9 +178,9 @@ const Index = () => {
     setShowKPIInfo(true);
   };
 
-  const handleRawDataClick = (sheetSource: string, record: KPIRecord) => {
+  const handleRawDataClick = (sheetSource: string, record?: KPIRecord) => {
     setSelectedRawDataSheet(sheetSource);
-    setSelectedRecord(record);
+    setSelectedRecord(record ?? null);
     setShowRawData(true);
   };
 

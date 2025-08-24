@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Database, Download, Calendar, AlertCircle } from "lucide-react";
 import { KPIRecord } from "@/types/kpi";
 import { useSourceData } from "@/hooks/useKPIData";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface RawDataModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ interface RawDataModalProps {
 export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataModalProps) => {
   const { sourceData, loading, error, fetchSourceData } = useSourceData();
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'all' | 'row'>(record ? 'row' : 'all');
 
   useEffect(() => {
     if (isOpen && sheetSource) {
@@ -32,8 +34,24 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     }
   }, [isOpen, sheetSource, fetchSourceData]);
 
+  useEffect(() => {
+    setViewMode(record ? 'row' : 'all');
+  }, [record, isOpen]);
+
+  const matchRecord = (row: Record<string, unknown>) => {
+    if (!record) return true;
+    const code = record.service_code_ref ? record.service_code_ref.toString().trim() : '';
+    const name = record['ชื่อหน่วยบริการ'] ? record['ชื่อหน่วยบริการ'].toString().trim() : '';
+    return Object.values(row).some(value => {
+      const v = value?.toString().trim();
+      return (code && v === code) || (name && v === name);
+    });
+  };
+
+  const viewData = viewMode === 'row' ? sourceData.filter(matchRecord) : sourceData;
+
   // Filter data based on search term
-  const filteredData = sourceData.filter(row => {
+  const filteredData = viewData.filter(row => {
     if (!searchTerm) return true;
     return Object.values(row).some(value =>
       (value ?? '')
@@ -44,32 +62,32 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
   });
 
   // Get column headers
-  const headers = sourceData.length > 0 ? Object.keys(sourceData[0]) : [];
+  const headers = viewData.length > 0 ? Object.keys(viewData[0]) : [];
 
   const handleExport = () => {
     if (filteredData.length === 0) return;
 
-    const csv = [
-      headers.join(','),
-      ...filteredData.map(row => 
-        headers.map(header => {
-          const value = row[header]?.toString() || '';
-          return value.includes(',') ? `"${value}"` : value;
-        }).join(',')
+    const tableHeader = headers.map(h => `<th>${h}</th>`).join('');
+    const tableRows = filteredData
+      .map(row =>
+        `<tr>${headers
+          .map(h => `<td>${row[h] ?? ''}</td>`)
+          .join('')}</tr>`
       )
-    ].join('\n');
+      .join('');
+    const html = `<table><thead><tr>${tableHeader}</tr></thead><tbody>${tableRows}</tbody></table>`;
 
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\uFEFF' + html], { type: 'application/vnd.ms-excel' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `${sheetSource}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `${sheetSource}_${new Date().toISOString().split('T')[0]}.xls`;
     link.click();
   };
 
   if (loading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl max-h-[90vh]">
+        <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)]">
           <DialogHeader className="sr-only">
             <DialogTitle>กำลังโหลดข้อมูล</DialogTitle>
             <DialogDescription>กำลังโหลดข้อมูลดิบ</DialogDescription>
@@ -86,7 +104,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
   if (error) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)]">
           <DialogHeader className="sr-only">
             <DialogTitle>เกิดข้อผิดพลาด</DialogTitle>
             <DialogDescription>{error}</DialogDescription>
@@ -106,7 +124,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[90vh] p-0">
+      <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)] p-0 flex flex-col">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl font-bold flex items-center">
             <Database className="h-5 w-5 mr-2" />
@@ -138,6 +156,16 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
             </Card>
           )}
 
+          {/* View Mode Tabs */}
+          {record && (
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'all' | 'row')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="row">เฉพาะหน่วยนี้</TabsTrigger>
+                <TabsTrigger value="all">ทั้งหมด</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
+
           {/* Search and Actions */}
           <div className="flex items-center justify-between space-x-4">
             <div className="relative flex-1 max-w-md">
@@ -151,18 +179,18 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
             </div>
             <div className="flex items-center space-x-2">
               <Badge variant="outline" className="text-xs">
-                {filteredData.length} / {sourceData.length} รายการ
+                {filteredData.length} / {viewData.length} รายการ
               </Badge>
               <Button variant="outline" size="sm" onClick={handleExport}>
                 <Download className="h-4 w-4 mr-1" />
-                Export CSV
+                Export Excel
               </Button>
             </div>
           </div>
         </div>
 
         {/* Data Table */}
-        <ScrollArea className="h-[calc(90vh-16rem)] px-6">
+        <ScrollArea className="flex-1 px-6">
           {filteredData.length > 0 ? (
             <div className="pb-6">
               <div className="border rounded-lg overflow-hidden">
@@ -225,7 +253,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
             <div className="text-center p-8">
               <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
               <p className="text-lg text-muted-foreground">
-                {sourceData.length === 0 ? 'ไม่พบข้อมูลในแหล่งข้อมูลนี้' : 'ไม่พบข้อมูลที่ตรงกับการค้นหา'}
+                {viewData.length === 0 ? 'ไม่พบข้อมูลในแหล่งข้อมูลนี้' : 'ไม่พบข้อมูลที่ตรงกับการค้นหา'}
               </p>
               {searchTerm && (
                 <Button 

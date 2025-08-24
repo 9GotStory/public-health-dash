@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUpDown, ChevronLeft, Info, Database, Calendar, Building2 } from "lucide-react";
+import { ArrowUpDown, ChevronLeft, Info, Database, Calendar, Building2, Table as TableIcon } from "lucide-react";
 import { KPIRecord } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
 
@@ -12,7 +12,7 @@ interface KPIDetailTableProps {
   groupName?: string;
   onBack?: () => void;
   onKPIInfoClick: (kpiInfoId: string) => void;
-  onRawDataClick: (sheetSource: string, record: KPIRecord) => void;
+  onRawDataClick: (sheetSource: string, record?: KPIRecord) => void;
 }
 
 export const KPIDetailTable = ({ 
@@ -132,6 +132,9 @@ export const KPIDetailTable = ({
                           const percentage = calculatePercentage(record);
                           const threshold = parseFloat(record['เกณฑ์ผ่าน (%)']?.toString() || '0');
                           const hasResult = record['ผลงาน']?.toString().trim() !== '';
+                          const sheetSource =
+                            record.sheet_source?.trim() ||
+                            (record as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
 
                           return (
                             <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
@@ -162,15 +165,25 @@ export const KPIDetailTable = ({
                               </td>
                               <td className="p-3">
                                 <div className="flex space-x-1 justify-center">
-                                  {record.sheet_source && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => onRawDataClick(record.sheet_source, record)}
-                                      title="ดูข้อมูลดิบ"
-                                    >
-                                      <Database className="h-4 w-4" />
-                                    </Button>
+                                  {sheetSource && (
+                                    <>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => onRawDataClick(sheetSource)}
+                                        title="ข้อมูลทั้งหมด"
+                                      >
+                                        <Database className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => onRawDataClick(sheetSource, record)}
+                                        title="เฉพาะหน่วยนี้"
+                                      >
+                                        <TableIcon className="h-4 w-4" />
+                                      </Button>
+                                    </>
                                   )}
                                 </div>
                               </td>

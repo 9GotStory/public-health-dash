@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, Activity, Target, TrendingUp, Users } from "lucide-react";
+import { ChevronRight, Brain, Pill, Ribbon, Target, TrendingUp } from "lucide-react";
 import { KPIRecord, SummaryStats } from "@/types/kpi";
 
 interface KPIGroupCardsProps {
@@ -20,11 +20,14 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
   }, {} as Record<string, KPIRecord[]>);
 
   const getGroupIcon = (groupName: string) => {
-    if (groupName.includes('สุขภาพจิต') || groupName.includes('ยาเสพติด')) {
-      return <Users className="h-6 w-6" />;
+    if (groupName.includes('สุขภาพจิต')) {
+      return <Brain className="h-6 w-6" />;
+    }
+    if (groupName.includes('ยาเสพติด')) {
+      return <Pill className="h-6 w-6" />;
     }
     if (groupName.includes('มะเร็ง')) {
-      return <Activity className="h-6 w-6" />;
+      return <Ribbon className="h-6 w-6" />;
     }
     return <Target className="h-6 w-6" />;
   };

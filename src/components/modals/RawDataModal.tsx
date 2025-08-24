@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Database, Download, Calendar, AlertCircle } from "lucide-react";
 import { KPIRecord } from "@/types/kpi";
 import { useSourceData } from "@/hooks/useKPIData";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface RawDataModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ interface RawDataModalProps {
 export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataModalProps) => {
   const { sourceData, loading, error, fetchSourceData } = useSourceData();
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'all' | 'row'>(record ? 'row' : 'all');
 
   useEffect(() => {
     if (isOpen && sheetSource) {
@@ -32,8 +34,24 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     }
   }, [isOpen, sheetSource, fetchSourceData]);
 
+  useEffect(() => {
+    setViewMode(record ? 'row' : 'all');
+  }, [record, isOpen]);
+
+  const matchRecord = (row: Record<string, unknown>) => {
+    if (!record) return true;
+    const code = record.service_code_ref ? record.service_code_ref.toString().trim() : '';
+    const name = record['ชื่อหน่วยบริการ'] ? record['ชื่อหน่วยบริการ'].toString().trim() : '';
+    return Object.values(row).some(value => {
+      const v = value?.toString().trim();
+      return (code && v === code) || (name && v === name);
+    });
+  };
+
+  const viewData = viewMode === 'row' ? sourceData.filter(matchRecord) : sourceData;
+
   // Filter data based on search term
-  const filteredData = sourceData.filter(row => {
+  const filteredData = viewData.filter(row => {
     if (!searchTerm) return true;
     return Object.values(row).some(value =>
       (value ?? '')
@@ -44,7 +62,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
   });
 
   // Get column headers
-  const headers = sourceData.length > 0 ? Object.keys(sourceData[0]) : [];
+  const headers = viewData.length > 0 ? Object.keys(viewData[0]) : [];
 
   const handleExport = () => {
     if (filteredData.length === 0) return;
@@ -138,6 +156,16 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
             </Card>
           )}
 
+          {/* View Mode Tabs */}
+          {record && (
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'all' | 'row')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="row">เฉพาะหน่วยนี้</TabsTrigger>
+                <TabsTrigger value="all">ทั้งหมด</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
+
           {/* Search and Actions */}
           <div className="flex items-center justify-between space-x-4">
             <div className="relative flex-1 max-w-md">
@@ -151,7 +179,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
             </div>
             <div className="flex items-center space-x-2">
               <Badge variant="outline" className="text-xs">
-                {filteredData.length} / {sourceData.length} รายการ
+                {filteredData.length} / {viewData.length} รายการ
               </Badge>
               <Button variant="outline" size="sm" onClick={handleExport}>
                 <Download className="h-4 w-4 mr-1" />
@@ -225,7 +253,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
             <div className="text-center p-8">
               <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
               <p className="text-lg text-muted-foreground">
-                {sourceData.length === 0 ? 'ไม่พบข้อมูลในแหล่งข้อมูลนี้' : 'ไม่พบข้อมูลที่ตรงกับการค้นหา'}
+                {viewData.length === 0 ? 'ไม่พบข้อมูลในแหล่งข้อมูลนี้' : 'ไม่พบข้อมูลที่ตรงกับการค้นหา'}
               </p>
               {searchTerm && (
                 <Button 

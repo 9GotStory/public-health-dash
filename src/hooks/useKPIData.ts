@@ -113,7 +113,6 @@ export const useSourceData = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const result: APIResponse<Record<string, unknown>[]> = await response.json();
       if (result.status === 'error') {
         throw new Error(result.message || 'เกิดข้อผิดพลาดในการดึงข้อมูลต้นฉบับ');

@@ -80,10 +80,10 @@ export interface APIResponse<T> {
 }
 
 export interface FilterState {
-  searchTerm: string;
   selectedGroup: string;
   selectedMainKPI: string;
   selectedSubKPI: string;
   selectedTarget: string;
   selectedService: string;
+  statusFilters: string[];
 }

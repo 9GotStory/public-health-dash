@@ -128,7 +128,8 @@ const Index = () => {
 
     return data.filter(item => {
       const percentage = calculatePercentage(item);
-      if (percentage === null) return false;
+      const resultRaw = item['ผลงาน']?.toString().trim();
+      if (percentage === null || !resultRaw) return false;
       const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']?.toString() || '0');
       const status = percentage >= threshold
         ? 'passed'

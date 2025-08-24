@@ -131,7 +131,8 @@ export const KPIDetailTable = ({
                         {records.map((record, index) => {
                           const percentage = calculatePercentage(record);
                           const threshold = parseFloat(record['เกณฑ์ผ่าน (%)']?.toString() || '0');
-                          
+                          const hasResult = record['ผลงาน']?.toString().trim() !== '';
+
                           return (
                             <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
                               <td className="p-3">
@@ -149,7 +150,7 @@ export const KPIDetailTable = ({
                               </td>
                               <td className="p-3 text-right">
                                 <div className="space-y-1">
-                                  <div className="font-semibold">{formatPercentage(percentage)}</div>
+                                  <div className="font-semibold">{hasResult ? formatPercentage(percentage) : ''}</div>
                                   <Progress value={Math.min(percentage ?? 0, 100)} className="h-1.5" />
                                 </div>
                               </td>
@@ -157,7 +158,7 @@ export const KPIDetailTable = ({
                                 {formatPercentage(threshold)}
                               </td>
                               <td className="p-3 text-center">
-                                {percentage !== null ? getStatusBadge(percentage, threshold) : '-'}
+                                {percentage !== null && hasResult ? getStatusBadge(percentage, threshold) : '-'}
                               </td>
                               <td className="p-3">
                                 <div className="flex space-x-1 justify-center">

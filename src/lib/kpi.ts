@@ -2,6 +2,7 @@ import { KPIRecord } from '@/types/kpi';
 
 /**
  * Calculate percentage from target and result values.
+ * Blank results are treated as zero.
  * Returns null when both target and result are empty or zero,
  * or when target is zero/invalid to avoid division by zero.
  */
@@ -17,7 +18,7 @@ export const calculatePercentage = (record: Pick<KPIRecord, 'เป้าหม�
   }
 
   const target = parseFloat(targetRaw);
-  const result = parseFloat(resultRaw);
+  const result = resultRaw === '' ? 0 : parseFloat(resultRaw);
 
   if (isNaN(target) || target === 0 || isNaN(result)) {
     return null;

@@ -109,7 +109,8 @@ export const KPIDetailTable = ({
                             size="sm"
                             onClick={() => onRawDataClick(groupSheetSource)}
                           >
-                            <i className="fa-solid fa-database mr-1"></i>
+                            <i className="fa-solid fa-table-list mr-1"></i>
+
                             ข้อมูลทั้งหมด
                           </Button>
                         )}
@@ -153,7 +154,7 @@ export const KPIDetailTable = ({
                             <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
                               <td className="p-3">
                                 <div className="flex items-center space-x-2">
-                                  <i className="fa-solid fa-building text-muted-foreground"></i>
+                                  <i className="fa-solid fa-users text-muted-foreground"></i>
                                   <span>{record['กลุ่มเป้าหมาย']}</span>
                                 </div>
                               </td>
@@ -185,7 +186,7 @@ export const KPIDetailTable = ({
                                       onClick={() => onRawDataClick(sheetSource, record)}
                                       title="เฉพาะหน่วยนี้"
                                     >
-                                      <i className="fa-solid fa-table"></i>
+                                      <i className="fa-solid fa-eye"></i>
                                     </Button>
                                   )}
                                 </div>
@@ -200,7 +201,7 @@ export const KPIDetailTable = ({
                   {/* Update Info */}
                   {records[0]?.['ข้อมูลวันที่'] && (
                     <div className="mt-3 pt-3 border-t text-xs text-muted-foreground flex items-center">
-                      <i className="fa-solid fa-calendar mr-1"></i>
+                      <i className="fa-solid fa-clock-rotate-left mr-1"></i>
                       อัพเดทล่าสุด: {records[0]['ข้อมูลวันที่']}
                     </div>
                   )}
@@ -215,7 +216,8 @@ export const KPIDetailTable = ({
       {Object.keys(groupedData).length === 0 && (
         <Card className="p-8 text-center">
           <div className="text-muted-foreground">
-            <i className="fa-solid fa-database text-6xl mx-auto mb-4 opacity-50"></i>
+            <i className="fa-solid fa-circle-exclamation text-6xl mx-auto mb-4 opacity-50"></i>
+
             <p className="text-lg">ไม่พบข้อมูลตัวชี้วัดที่ตรงกับเงื่อนไข</p>
           </div>
         </Card>

@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -64,6 +70,10 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-6xl max-h-[90vh]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>กำลังโหลดข้อมูล</DialogTitle>
+            <DialogDescription>กำลังโหลดข้อมูลดิบ</DialogDescription>
+          </DialogHeader>
           <div className="flex items-center justify-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <span className="ml-3">กำลังโหลดข้อมูล...</span>
@@ -77,6 +87,10 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>เกิดข้อผิดพลาด</DialogTitle>
+            <DialogDescription>{error}</DialogDescription>
+          </DialogHeader>
           <div className="text-center p-8">
             <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">เกิดข้อผิดพลาด</h3>
@@ -98,6 +112,9 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
             <Database className="h-5 w-5 mr-2" />
             ข้อมูลดิบ: {sheetSource}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            ข้อมูลดิบจาก {sheetSource}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="px-6 space-y-4">

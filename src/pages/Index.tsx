@@ -233,7 +233,6 @@ const Index = () => {
         {/* Dashboard Header */}
         <DashboardHeader
           summary={filteredSummary}
-          lastUpdate={allData.metadata?.lastUpdate}
         />
 
         {/* Filter Panel */}

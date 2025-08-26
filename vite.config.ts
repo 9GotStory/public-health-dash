@@ -5,6 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // Use the repository name when deploying to GitHub Pages
+  base: mode === "development" ? "/" : "/public-health-dash/",
   server: {
     host: "::",
     port: 8080,

@@ -1,6 +1,8 @@
 # Public Health Dashboard
 
-ระบบเว็บสำหรับติดตามประเด็นขับเคลื่อนตัวชี้วัดของคณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง
+![โลโก้กระทรวงสาธารณสุข](public/moph-logo.svg)
+
+Dashboard ติดตามประเด็นขับเคลื่อนตัวชี้วัดของคณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง
 This project provides an interactive dashboard for the Song District Public Health Coordinating Committee to track indicator-driven initiatives.
 
 ## Technologies

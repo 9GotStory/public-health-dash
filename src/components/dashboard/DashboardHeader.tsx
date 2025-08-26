@@ -4,10 +4,9 @@ import { SummaryStats } from "@/types/kpi";
 
 interface DashboardHeaderProps {
   summary: SummaryStats;
-  lastUpdate?: string;
 }
 
-export const DashboardHeader = ({ summary, lastUpdate }: DashboardHeaderProps) => {
+export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
   const successRate = summary.totalKPIs > 0 ? 
     Math.round((summary.passedKPIs / summary.totalKPIs) * 100) : 0;
 
@@ -15,11 +14,8 @@ export const DashboardHeader = ({ summary, lastUpdate }: DashboardHeaderProps) =
     <div className="space-y-6">
       {/* Header Section */}
       <div className="bg-gradient-to-r from-primary to-primary-hover text-primary-foreground p-8 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold mb-2">ระบบติดตามประเด็นขับเคลื่อนตัวชี้วัด</h1>
-        <p className="text-lg opacity-90">Dashboard สำหรับคณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง</p>
-        {lastUpdate && (
-          <p className="text-sm opacity-75 mt-2">อัพเดทล่าสุด: {lastUpdate}</p>
-        )}
+        <h1 className="text-3xl font-bold mb-2">Dashboard ติดตามประเด็นขับเคลื่อนตัวชี้วัด</h1>
+        <p className="text-lg opacity-90">คณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง</p>
       </div>
 
       {/* Stats Cards */}

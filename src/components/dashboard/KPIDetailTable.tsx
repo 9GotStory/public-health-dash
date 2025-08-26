@@ -9,7 +9,6 @@ import {
   AlertCircle,
   ChevronLeft,
   Eye,
-  History,
   Info,
   Table,
   Users,
@@ -206,13 +205,6 @@ export const KPIDetailTable = ({
                     </table>
                   </div>
 
-                  {/* Update Info */}
-                  {records[0]?.['ข้อมูลวันที่'] && (
-                    <div className="mt-3 pt-3 border-t text-xs text-muted-foreground flex items-center">
-                      <History className="h-4 w-4 mr-1" />
-                      อัพเดทล่าสุด: {records[0]['ข้อมูลวันที่']}
-                    </div>
-                  )}
                 </div>
               );
             })}

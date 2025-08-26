@@ -1,4 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <circle cx="100" cy="100" r="100" fill="#006400"/>
-  <text x="100" y="115" font-size="60" text-anchor="middle" fill="white" font-family="Arial, sans-serif">MOPH</text>
+  <circle cx="100" cy="100" r="100" fill="#006644"/>
+  <g fill="#fff">
+    <!-- wings -->
+    <path d="M60 60h80l-20-20h-40z"/>
+    <path d="M60 60h80l-20 20h-40z"/>
+    <!-- rod -->
+    <rect x="96" y="60" width="8" height="80"/>
+    <!-- snake -->
+    <path d="M100 80c20-5 20 15 0 20s-20 25 0 30 20 25 0 30" stroke="#fff" stroke-width="6" fill="none"/>
+    <!-- circle center -->
+    <circle cx="100" cy="70" r="8"/>
+  </g>
 </svg>

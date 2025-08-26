@@ -6,7 +6,6 @@ Dashboard ติดตามประเด็นขับเคลื่อน�
 This project provides an interactive dashboard for the Song District Public Health Coordinating Committee to track indicator-driven initiatives.
 
 ## Technologies
-
 - Vite
 - TypeScript
 - React

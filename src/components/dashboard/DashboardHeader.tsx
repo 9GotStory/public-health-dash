@@ -15,8 +15,8 @@ export const DashboardHeader = ({ summary, lastUpdate }: DashboardHeaderProps) =
     <div className="space-y-6">
       {/* Header Section */}
       <div className="bg-gradient-to-r from-primary to-primary-hover text-primary-foreground p-8 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold mb-2">ระบบติดตาม KPI หน่วยบริการสาธารณสุข</h1>
-        <p className="text-lg opacity-90">Dashboard สำหรับติดตามตัวชี้วัดความสำเร็จของหน่วยบริการ</p>
+        <h1 className="text-3xl font-bold mb-2">ระบบติดตามประเด็นขับเคลื่อนตัวชี้วัด</h1>
+        <p className="text-lg opacity-90">Dashboard สำหรับคณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง</p>
         {lastUpdate && (
           <p className="text-sm opacity-75 mt-2">อัพเดทล่าสุด: {lastUpdate}</p>
         )}

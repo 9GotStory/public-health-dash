@@ -1,7 +1,7 @@
 # Public Health Dashboard
 
-ระบบเว็บสำหรับติดตามตัวชี้วัดความสำเร็จของหน่วยบริการสาธารณสุข  
-This project provides an interactive dashboard for monitoring key performance indicators (KPIs) of public health service units.
+ระบบเว็บสำหรับติดตามประเด็นขับเคลื่อนตัวชี้วัดของคณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง
+This project provides an interactive dashboard for the Song District Public Health Coordinating Committee to track indicator-driven initiatives.
 
 ## Technologies
 

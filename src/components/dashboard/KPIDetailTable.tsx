@@ -29,8 +29,6 @@ interface KPIDetailTableProps {
 export const KPIDetailTable = ({
   data,
   groupName,
-  groupIcon,
-  summary,
   onBack,
   onKPIInfoClick,
   onRawDataClick
@@ -96,7 +94,12 @@ export const KPIDetailTable = ({
               กลับ
             </Button>
           )}
-          <h2 className="text-2xl font-bold">รายละเอียดตัวชี้วัด</h2>
+          <div>
+            <h2 className="text-2xl font-bold break-words">รายละเอียดตัวชี้วัด</h2>
+            {groupName && (
+              <p className="text-sm text-muted-foreground break-words">{groupName}</p>
+            )}
+          </div>
         </div>
         <div className="text-sm text-muted-foreground">
           รวม {data.length} รายการ

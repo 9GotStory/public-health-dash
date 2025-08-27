@@ -89,7 +89,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
         <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)]">
           <DialogHeader className="sr-only">
             <DialogTitle>กำลังโหลดข้อมูล</DialogTitle>
-            <DialogDescription>กำลังโหลดข้อมูลดิบ</DialogDescription>
+            <DialogDescription>กำลังโหลดข้อมูล</DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -125,12 +125,14 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)] p-0 flex flex-col">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-xl font-bold flex items-center">
-            <Database className="h-5 w-5 mr-2" />
-            ข้อมูลดิบ: {sheetSource}
+          <DialogTitle className="text-xl font-bold flex flex-col sm:flex-row sm:items-center">
+            <span className="flex items-center">
+              <Database className="h-5 w-5 mr-2" />ข้อมูล:
+            </span>
+            <span className="sm:ml-2">{sheetSource}</span>
           </DialogTitle>
           <DialogDescription className="sr-only">
-            ข้อมูลดิบจาก {sheetSource}
+            ข้อมูลจาก {sheetSource}
           </DialogDescription>
         </DialogHeader>
 
@@ -194,7 +196,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
             <div className="pb-6 h-full flex flex-col min-h-0">
               <div className="border rounded-lg flex-1 overflow-auto">
                 <table className="min-w-max w-full text-sm">
-                  <thead className="bg-muted/50 sticky top-0">
+                  <thead className="bg-muted sticky top-0">
                       <tr>
                         {headers.map((header, index) => (
                           <th
@@ -240,7 +242,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
                   <span className="hidden sm:inline">•</span>
                   <span>{headers.length} คอลัมน์</span>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center justify-end self-end sm:self-auto sm:ml-auto text-right">
                   <Calendar className="h-3 w-3 mr-1" />
                   ดึงข้อมูลเมื่อ: {new Date().toLocaleString('th-TH')}
                 </div>

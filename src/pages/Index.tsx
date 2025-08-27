@@ -250,7 +250,7 @@ const Index = () => {
             onGroupClick={handleGroupClick}
           />
         ) : (
-          <KPIDetailTable 
+          <KPIDetailTable
             data={filteredData}
             groupName={selectedGroup}
             onBack={handleBackToGroups}

@@ -29,11 +29,11 @@ import { KPIRecord, SummaryStats } from "@/types/kpi";
 
 interface KPIGroupCardsProps {
   data: KPIRecord[];
-  summary: SummaryStats;
-  onGroupClick: (groupName: string, icon: LucideIcon) => void;
+  stats: SummaryStats;
+  onGroupClick: (groupName: string) => void;
 }
 
-export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProps) => {
+export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps) => {
   // Group data by "ประเด็นขับเคลื่อน"
   const groupedData = data.reduce((acc, item) => {
     const group = item['ประเด็นขับเคลื่อน'];
@@ -93,7 +93,7 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(groupedData).map(([groupName, records]) => {
-          const groupStats = summary.groupStats[groupName];
+          const groupStats = stats.groupStats[groupName];
           const averagePercentage = groupStats?.averagePercentage || 0;
           const passedCount = groupStats?.passed || 0;
           const totalCount = groupStats?.count ?? 0;

@@ -88,6 +88,12 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
     return 'text-destructive';
   };
 
+  const getProgressClass = (percentage: number) => {
+    if (percentage >= 80) return 'bg-success/20 [&>div]:bg-success';
+    if (percentage >= 60) return 'bg-warning/20 [&>div]:bg-warning';
+    return 'bg-destructive/20 [&>div]:bg-destructive';
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl sm:text-2xl font-bold text-foreground break-words">
@@ -145,9 +151,9 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
                       {averagePercentage.toFixed(1)}%
                     </span>
                   </div>
-                  <Progress 
-                    value={Math.min(averagePercentage, 100)} 
-                    className="h-2"
+                  <Progress
+                    value={Math.min(averagePercentage, 100)}
+                    className={`h-2 ${getProgressClass(averagePercentage)}`}
                   />
                 </div>
 

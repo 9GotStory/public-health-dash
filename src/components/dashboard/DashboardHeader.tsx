@@ -3,19 +3,23 @@ import { TrendingUp, Target, CheckCircle, AlertTriangle } from "lucide-react";
 import { SummaryStats } from "@/types/kpi";
 
 interface DashboardHeaderProps {
-  summary: SummaryStats;
+  stats: SummaryStats;
 }
 
-export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
-  const successRate = summary.totalKPIs > 0 ? 
-    Math.round((summary.passedKPIs / summary.totalKPIs) * 100) : 0;
+export const DashboardHeader = ({ stats }: DashboardHeaderProps) => {
+  const successRate = stats.totalKPIs > 0 ?
+    Math.round((stats.passedKPIs / stats.totalKPIs) * 100) : 0;
 
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-primary to-primary-hover text-primary-foreground p-8 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold mb-2">Dashboard ติดตามประเด็นขับเคลื่อนตัวชี้วัด</h1>
-        <p className="text-lg opacity-90">คณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง</p>
+      <div className="bg-gradient-to-r from-primary to-primary-hover text-primary-foreground p-6 sm:p-8 rounded-lg shadow-lg">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">
+          Dashboard ติดตามประเด็นขับเคลื่อนตัวชี้วัด
+        </h1>
+        <p className="text-base sm:text-lg opacity-90">
+          คณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -27,7 +31,7 @@ export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">ตัวชี้วัดทั้งหมด</p>
-              <p className="text-2xl font-bold text-primary">{summary.totalKPIs}</p>
+              <p className="text-2xl font-bold text-primary">{stats.totalKPIs}</p>
             </div>
           </div>
         </Card>
@@ -39,7 +43,7 @@ export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">ผ่านเกณฑ์</p>
-              <p className="text-2xl font-bold text-success">{summary.passedKPIs}</p>
+              <p className="text-2xl font-bold text-success">{stats.passedKPIs}</p>
             </div>
           </div>
         </Card>
@@ -51,7 +55,7 @@ export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">ไม่ผ่านเกณฑ์</p>
-              <p className="text-2xl font-bold text-destructive">{summary.failedKPIs}</p>
+              <p className="text-2xl font-bold text-destructive">{stats.failedKPIs}</p>
             </div>
           </div>
         </Card>
@@ -74,13 +78,13 @@ export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">ภาพรวมผลการดำเนินงาน</h3>
           <div className="text-sm text-muted-foreground">
-            ค่าเฉลี่ย: {summary.averagePercentage.toFixed(2)}%
+            ค่าเฉลี่ย: {stats.averagePercentage.toFixed(2)}%
           </div>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
           <div 
             className="bg-gradient-to-r from-success to-success h-3 rounded-full transition-all duration-300"
-            style={{ width: `${Math.min(summary.averagePercentage, 100)}%` }}
+            style={{ width: `${Math.min(stats.averagePercentage, 100)}%` }}
           ></div>
         </div>
         <div className="flex justify-between text-xs text-muted-foreground mt-2">

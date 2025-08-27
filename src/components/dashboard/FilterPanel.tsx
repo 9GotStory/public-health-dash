@@ -150,7 +150,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               value={filters.selectedGroup} 
               onValueChange={(value) => handleFilterChange('selectedGroup', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full text-left">
                 <SelectValue placeholder="เลือกประเด็นขับเคลื่อน" />
               </SelectTrigger>
               <SelectContent className="bg-white">
@@ -177,7 +177,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               value={filters.selectedMainKPI} 
               onValueChange={(value) => handleFilterChange('selectedMainKPI', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full text-left">
                 <SelectValue placeholder="เลือกตัวชี้วัดหลัก" />
               </SelectTrigger>
               <SelectContent className="bg-white">
@@ -204,7 +204,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               value={filters.selectedSubKPI} 
               onValueChange={(value) => handleFilterChange('selectedSubKPI', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full text-left">
                 <SelectValue placeholder="เลือกตัวชี้วัดย่อย" />
               </SelectTrigger>
               <SelectContent className="bg-white">
@@ -231,7 +231,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               value={filters.selectedTarget} 
               onValueChange={(value) => handleFilterChange('selectedTarget', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full text-left">
                 <SelectValue placeholder="เลือกกลุ่มเป้าหมาย" />
               </SelectTrigger>
               <SelectContent className="bg-white">
@@ -258,7 +258,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               value={filters.selectedService}
               onValueChange={(value) => handleFilterChange("selectedService", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full text-left">
                 <SelectValue placeholder="เลือกหน่วยบริการ" />
               </SelectTrigger>
               <SelectContent className="bg-white">

@@ -30,7 +30,7 @@ import { KPIRecord, SummaryStats } from "@/types/kpi";
 interface KPIGroupCardsProps {
   data: KPIRecord[];
   summary: SummaryStats;
-  onGroupClick: (groupName: string) => void;
+  onGroupClick: (groupName: string, icon: LucideIcon) => void;
 }
 
 export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProps) => {
@@ -87,7 +87,9 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-foreground">ประเด็นขับเคลื่อนหลัก</h2>
+      <h2 className="text-xl sm:text-2xl font-bold text-foreground break-words">
+        ประเด็นขับเคลื่อนหลัก
+      </h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(groupedData).map(([groupName, records]) => {
@@ -101,20 +103,20 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
             <Card
               key={groupName}
               className="p-6 hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-primary"
-              onClick={() => onGroupClick(groupName)}
+              onClick={() => onGroupClick(groupName, IconComponent)}
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  <div className="p-2 bg-primary/10 rounded-lg text-primary flex-shrink-0">
                     <IconComponent className="h-6 w-6" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-base sm:text-lg leading-tight group-hover:text-primary transition-colors break-words">
                       {groupName}
                     </h3>
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
               </div>
 
               <div className="space-y-4">

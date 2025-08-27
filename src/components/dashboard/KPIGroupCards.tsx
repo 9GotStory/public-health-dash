@@ -31,7 +31,7 @@ import { KPIRecord, SummaryStats } from "@/types/kpi";
 interface KPIGroupCardsProps {
   data: KPIRecord[];
   stats: SummaryStats;
-  onGroupClick: (groupName: string) => void;
+  onGroupClick: (groupName: string, icon: LucideIcon) => void;
 }
 
 export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps) => {
@@ -88,6 +88,12 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
     return 'text-destructive';
   };
 
+  const getProgressClass = (percentage: number) => {
+    if (percentage >= 80) return 'bg-success/20 [&>div]:bg-success';
+    if (percentage >= 60) return 'bg-warning/20 [&>div]:bg-warning';
+    return 'bg-destructive/20 [&>div]:bg-destructive';
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl sm:text-2xl font-bold text-foreground break-words">
@@ -106,7 +112,7 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
             <Card
               key={groupName}
               className="p-6 hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-primary"
-              onClick={() => onGroupClick(groupName, IconComponent)}
+              onClick={() => onGroupClick(groupName, GroupIcon)}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3 min-w-0 flex-1">
@@ -145,9 +151,9 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
                       {averagePercentage.toFixed(1)}%
                     </span>
                   </div>
-                  <Progress 
-                    value={Math.min(averagePercentage, 100)} 
-                    className="h-2"
+                  <Progress
+                    value={Math.min(averagePercentage, 100)}
+                    className={`h-2 ${getProgressClass(averagePercentage)}`}
                   />
                 </div>
 

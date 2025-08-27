@@ -3,36 +3,54 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { KPIRecord } from "@/types/kpi";
+import { KPIRecord, SummaryStats } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
 import {
   AlertCircle,
   ChevronLeft,
   Eye,
   Info,
-  Table,
+  Table as TableIcon,
   Users,
+  Activity,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface KPIDetailTableProps {
   data: KPIRecord[];
   groupName?: string;
+  groupIcon?: LucideIcon;
+  summary?: SummaryStats;
   onBack?: () => void;
   onKPIInfoClick: (kpiInfoId: string) => void;
   onRawDataClick: (sheetSource: string, record?: KPIRecord) => void;
 }
 
-export const KPIDetailTable = ({ 
-  data, 
-  groupName, 
-  onBack, 
-  onKPIInfoClick, 
-  onRawDataClick 
+export const KPIDetailTable = ({
+  data,
+  groupName,
+  groupIcon,
+  summary,
+  onBack,
+  onKPIInfoClick,
+  onRawDataClick
 }: KPIDetailTableProps) => {
   const [sortField, setSortField] = useState<keyof KPIRecord | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const groupStats = groupName ? summary?.groupStats[groupName] : undefined;
+  const totalKPIs = groupStats?.count ?? 0;
+  const averagePercentage = groupStats?.averagePercentage ?? 0;
+  const passedCount = groupStats?.passed ?? 0;
+  const IconComponent = groupIcon ?? Activity;
+
+  const getStatusColor = (percentage: number) => {
+    if (percentage >= 80) return 'text-success';
+    if (percentage >= 60) return 'text-warning';
+    return 'text-destructive';
+  };
 
   // Group by main KPI first, then by sub KPI
   const groupedData = data.reduce((acc, item) => {
@@ -78,17 +96,50 @@ export const KPIDetailTable = ({
               กลับ
             </Button>
           )}
-          <div>
-            <h2 className="text-2xl font-bold">รายละเอียดตัวชี้วัด</h2>
-            {groupName && (
-              <p className="text-muted-foreground mt-1">ประเด็นขับเคลื่อน: {groupName}</p>
-            )}
-          </div>
+          <h2 className="text-2xl font-bold">รายละเอียดตัวชี้วัด</h2>
         </div>
         <div className="text-sm text-muted-foreground">
           รวม {data.length} รายการ
         </div>
       </div>
+
+      {groupName && (
+        <Card className="p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-primary/10 rounded-lg text-primary flex-shrink-0">
+              <IconComponent className="h-6 w-6" />
+            </div>
+            <h3 className="font-semibold text-base sm:text-lg leading-tight break-words flex-1">
+              {groupName}
+            </h3>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center space-x-2">
+                <span className="text-muted-foreground">ตัวชี้วัด:</span>
+                <span className="font-medium">{totalKPIs}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-muted-foreground">ผ่าน:</span>
+                <span className={`font-medium ${getStatusColor(averagePercentage)}`}>
+                  {passedCount}/{totalKPIs}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">ความสำเร็จเฉลี่ย</span>
+                <span className={`text-lg font-bold ${getStatusColor(averagePercentage)}`}>
+                  {averagePercentage.toFixed(1)}%
+                </span>
+              </div>
+              <Progress value={Math.min(averagePercentage, 100)} className="h-2" />
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Main KPI Groups */}
       <div className="space-y-8 border border-primary/20 rounded-lg p-4">
@@ -117,8 +168,8 @@ export const KPIDetailTable = ({
                             size="sm"
                             onClick={() => onRawDataClick(groupSheetSource)}
                           >
-                            <Table className="h-4 w-4 mr-1" />
-                            ข้อมูลทั้งหมด
+                            <TableIcon className="h-4 w-4 mr-0 sm:mr-1" />
+                            <span className="hidden sm:inline">ข้อมูลทั้งหมด</span>
                           </Button>
                         )}
                         {records[0]?.kpi_info_id && (
@@ -127,8 +178,8 @@ export const KPIDetailTable = ({
                             size="sm"
                             onClick={() => onKPIInfoClick(records[0].kpi_info_id)}
                           >
-                            <Info className="h-4 w-4 mr-1" />
-                            รายละเอียด KPI
+                            <Info className="h-4 w-4 mr-0 sm:mr-1" />
+                            <span className="hidden sm:inline">รายละเอียด KPI</span>
                           </Button>
                         )}
                       </div>
@@ -159,13 +210,13 @@ export const KPIDetailTable = ({
                             (record as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
                           return (
                             <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
-                              <td className="p-3">
+                              <td className="p-3 align-top">
                                 <div className="flex items-center space-x-2">
-                                  <Users className="h-4 w-4 text-muted-foreground" />
-                                  <span>{record['กลุ่มเป้าหมาย']}</span>
+                                  <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                  <span className="break-words">{record['กลุ่มเป้าหมาย']}</span>
                                 </div>
                               </td>
-                              <td className="p-3 font-medium">{record['ชื่อหน่วยบริการ']}</td>
+                              <td className="p-3 font-medium break-words">{record['ชื่อหน่วยบริการ']}</td>
                               <td className="p-3 text-right font-mono">
                                 {formatNumber(record['เป้าหมาย'])}
                               </td>

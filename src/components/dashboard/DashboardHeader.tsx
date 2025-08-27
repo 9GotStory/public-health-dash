@@ -13,9 +13,13 @@ export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-primary to-primary-hover text-primary-foreground p-8 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold mb-2">Dashboard ติดตามประเด็นขับเคลื่อนตัวชี้วัด</h1>
-        <p className="text-lg opacity-90">คณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง</p>
+      <div className="bg-gradient-to-r from-primary to-primary-hover text-primary-foreground p-6 sm:p-8 rounded-lg shadow-lg">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">
+          Dashboard ติดตามประเด็นขับเคลื่อนตัวชี้วัด
+        </h1>
+        <p className="text-base sm:text-lg opacity-90">
+          คณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง
+        </p>
       </div>
 
       {/* Stats Cards */}

@@ -176,7 +176,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
                 className="pl-10"
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-2 w-full sm:w-auto">
               <Badge variant="outline" className="text-xs whitespace-nowrap">
                 {filteredData.length} / {viewData.length} รายการ
               </Badge>
@@ -189,9 +189,9 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
         </div>
 
         {/* Data Table */}
-        <div className="flex-1 px-4 sm:px-6">
+        <div className="flex-1 px-4 sm:px-6 min-h-0">
           {filteredData.length > 0 ? (
-            <div className="pb-6 h-full flex flex-col">
+            <div className="pb-6 h-full flex flex-col min-h-0">
               <div className="border rounded-lg flex-1 overflow-auto">
                 <table className="min-w-max w-full text-sm">
                   <thead className="bg-muted/50 sticky top-0">

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { KPIRecord, SummaryStats } from "@/types/kpi";
+import { KPIRecord } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
 import { formatNumber, formatPercentage } from "@/lib/format";
 import { StatusBadge } from "./StatusBadge";
@@ -17,84 +17,18 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-const getStatusBadge = (percentage: number, threshold: number) => {
-  if (percentage >= threshold) {
-    return <Badge variant="default" className="bg-success text-success-foreground">ผ่าน</Badge>;
-  } else if (percentage >= threshold * 0.8) {
-    return <Badge variant="default" className="bg-warning text-warning-foreground">ใกล้เป้า</Badge>;
-  }
-  return <Badge variant="destructive">ไม่ผ่าน</Badge>;
+const getStatusColor = (percentage: number) => {
+  if (percentage >= 80) return "text-success";
+  if (percentage >= 60) return "text-warning";
+  return "text-destructive";
 };
 
-const formatNumber = (value: string | number) => {
-  const num = typeof value === "string" ? parseFloat(value) : value;
-  return isNaN(num) ? value : num.toLocaleString();
-};
-
-const formatPercentage = (value: string | number | null | undefined) => {
-  if (value === null || value === undefined || value === "") return "";
-  const num = typeof value === "string" ? parseFloat(value) : value;
-  return isNaN(num) ? "" : `${num.toFixed(2)}%`;
-};
-
-const getStatusBadge = (percentage: number, threshold: number) => {
-  if (percentage >= threshold) {
-    return <Badge variant="default" className="bg-success text-success-foreground">ผ่าน</Badge>;
-  } else if (percentage >= threshold * 0.8) {
-    return <Badge variant="default" className="bg-warning text-warning-foreground">ใกล้เป้า</Badge>;
-  }
-  return <Badge variant="destructive">ไม่ผ่าน</Badge>;
-};
-
-const formatNumber = (value: string | number) => {
-  const num = typeof value === "string" ? parseFloat(value) : value;
-  return isNaN(num) ? value : num.toLocaleString();
-};
-
-const formatPercentage = (value: string | number | null | undefined) => {
-  if (value === null || value === undefined || value === "") return "";
-  const num = typeof value === "string" ? parseFloat(value) : value;
-  return isNaN(num) ? "" : `${num.toFixed(2)}%`;
-};
-
-const getStatusBadge = (percentage: number, threshold: number) => {
-  if (percentage >= threshold) {
-    return <Badge variant="default" className="bg-success text-success-foreground">ผ่าน</Badge>;
-  } else if (percentage >= threshold * 0.8) {
-    return <Badge variant="default" className="bg-warning text-warning-foreground">ใกล้เป้า</Badge>;
-  }
-  return <Badge variant="destructive">ไม่ผ่าน</Badge>;
-};
-
-const formatNumber = (value: string | number) => {
-  const num = typeof value === "string" ? parseFloat(value) : value;
-  return isNaN(num) ? value : num.toLocaleString();
-};
-
-const formatPercentage = (value: string | number | null | undefined) => {
-  if (value === null || value === undefined || value === "") return "";
-  const num = typeof value === "string" ? parseFloat(value) : value;
-  return isNaN(num) ? "" : `${num.toFixed(2)}%`;
-};
-
-const getStatusBadge = (percentage: number, threshold: number) => {
-  if (percentage >= threshold) {
-    return <Badge variant="default" className="bg-success text-success-foreground">ผ่าน</Badge>;
-  }
-  if (percentage >= threshold * 0.8) {
-    return <Badge variant="default" className="bg-warning text-warning-foreground">ใกล้เป้า</Badge>;
-  }
-  return <Badge variant="destructive">ไม่ผ่าน</Badge>;
-};
-
-// Displays KPI details grouped by main and sub indicators using shared
-// formatting and status helpers to avoid duplicate declarations.
+// Displays KPI details grouped by main and sub indicators.
 
 interface KPIDetailTableProps {
   data: KPIRecord[];
   groupName?: string;
   groupIcon?: LucideIcon;
-  summary?: SummaryStats;
   onBack?: () => void;
   onKPIInfoClick: (kpiInfoId: string) => void;
   onRawDataClick: (sheetSource: string, record?: KPIRecord) => void;
@@ -103,6 +37,7 @@ interface KPIDetailTableProps {
 export const KPIDetailTable = ({
   data,
   groupName,
+  groupIcon: IconComponent = Activity,
   onBack,
   onKPIInfoClick,
   onRawDataClick
@@ -120,6 +55,30 @@ export const KPIDetailTable = ({
       return acc;
     }, {} as Record<string, Record<string, KPIRecord[]>>);
   }, [data]);
+
+  const { totalKPIs, passedCount, averagePercentage } = useMemo(() => {
+    let total = 0;
+    let passed = 0;
+    let sumPercentage = 0;
+
+    Object.values(groupedData).forEach((subGroups) => {
+      Object.values(subGroups).forEach((records) => {
+        total++;
+        const percentage = calculatePercentage(records[0]) ?? 0;
+        const threshold = parseFloat(
+          records[0]['เกณฑ์ผ่าน (%)']?.toString() || '0'
+        );
+        if (percentage >= threshold) passed++;
+        sumPercentage += percentage;
+      });
+    });
+
+    return {
+      totalKPIs: total,
+      passedCount: passed,
+      averagePercentage: total > 0 ? sumPercentage / total : 0,
+    };
+  }, [groupedData]);
 
   return (
     <div className="space-y-6">

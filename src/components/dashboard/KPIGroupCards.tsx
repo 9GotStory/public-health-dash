@@ -31,7 +31,7 @@ import { KPIRecord, SummaryStats } from "@/types/kpi";
 interface KPIGroupCardsProps {
   data: KPIRecord[];
   stats: SummaryStats;
-  onGroupClick: (groupName: string) => void;
+  onGroupClick: (groupName: string, icon: LucideIcon) => void;
 }
 
 export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps) => {
@@ -106,7 +106,7 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
             <Card
               key={groupName}
               className="p-6 hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-primary"
-              onClick={() => onGroupClick(groupName, IconComponent)}
+              onClick={() => onGroupClick(groupName, GroupIcon)}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3 min-w-0 flex-1">

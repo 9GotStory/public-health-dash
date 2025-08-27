@@ -10,7 +10,7 @@ import {
   ChevronLeft,
   Eye,
   Info,
-  Table,
+  Table as TableIcon,
   Users,
   Activity,
 } from "lucide-react";
@@ -255,7 +255,6 @@ export const KPIDetailTable = ({
                       </tbody>
                     </table>
                   </div>
-
                 </div>
               );
             })}

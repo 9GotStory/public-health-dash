@@ -56,6 +56,26 @@ const formatPercentage = (value: string | number | null | undefined) => {
   return isNaN(num) ? "" : `${num.toFixed(2)}%`;
 };
 
+const getStatusBadge = (percentage: number, threshold: number) => {
+  if (percentage >= threshold) {
+    return <Badge variant="default" className="bg-success text-success-foreground">ผ่าน</Badge>;
+  } else if (percentage >= threshold * 0.8) {
+    return <Badge variant="default" className="bg-warning text-warning-foreground">ใกล้เป้า</Badge>;
+  }
+  return <Badge variant="destructive">ไม่ผ่าน</Badge>;
+};
+
+const formatNumber = (value: string | number) => {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  return isNaN(num) ? value : num.toLocaleString();
+};
+
+const formatPercentage = (value: string | number | null | undefined) => {
+  if (value === null || value === undefined || value === "") return "";
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  return isNaN(num) ? "" : `${num.toFixed(2)}%`;
+};
+
 interface KPIDetailTableProps {
   data: KPIRecord[];
   groupName?: string;

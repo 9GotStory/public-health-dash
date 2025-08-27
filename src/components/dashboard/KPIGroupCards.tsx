@@ -95,12 +95,12 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
       </h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Object.entries(groupedData).map(([groupName, records]) => {
+        {Object.entries(groupedData).map(([groupName]) => {
           const groupStats = stats.groupStats[groupName];
           const averagePercentage = groupStats?.averagePercentage || 0;
           const passedCount = groupStats?.passed || 0;
           const totalCount = groupStats?.count ?? 0;
-          const IconComponent = getGroupIcon(groupName);
+          const GroupIcon = getGroupIcon(groupName);
 
           return (
             <Card
@@ -111,7 +111,7 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3 min-w-0 flex-1">
                   <div className="p-2 bg-primary/10 rounded-lg text-primary flex-shrink-0">
-                    <IconComponent className="h-6 w-6" />
+                    <GroupIcon className="h-6 w-6" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-base sm:text-lg leading-tight group-hover:text-primary transition-colors break-words">

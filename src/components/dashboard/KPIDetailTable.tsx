@@ -117,8 +117,8 @@ export const KPIDetailTable = ({
                             size="sm"
                             onClick={() => onRawDataClick(groupSheetSource)}
                           >
-                            <Table className="h-4 w-4 mr-1" />
-                            ข้อมูลทั้งหมด
+                            <Table className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">ข้อมูลทั้งหมด</span>
                           </Button>
                         )}
                         {records[0]?.kpi_info_id && (
@@ -127,8 +127,8 @@ export const KPIDetailTable = ({
                             size="sm"
                             onClick={() => onKPIInfoClick(records[0].kpi_info_id)}
                           >
-                            <Info className="h-4 w-4 mr-1" />
-                            รายละเอียด KPI
+                            <Info className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">รายละเอียด KPI</span>
                           </Button>
                         )}
                       </div>
@@ -159,13 +159,15 @@ export const KPIDetailTable = ({
                             (record as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
                           return (
                             <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
-                              <td className="p-3">
+                              <td className="p-3 align-top">
                                 <div className="flex items-center space-x-2">
-                                  <Users className="h-4 w-4 text-muted-foreground" />
-                                  <span>{record['กลุ่มเป้าหมาย']}</span>
+                                  <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                  <span className="break-words">{record['กลุ่มเป้าหมาย']}</span>
                                 </div>
                               </td>
-                              <td className="p-3 font-medium">{record['ชื่อหน่วยบริการ']}</td>
+                              <td className="p-3 font-medium break-words">
+                                {record['ชื่อหน่วยบริการ']}
+                              </td>
                               <td className="p-3 text-right font-mono">
                                 {formatNumber(record['เป้าหมาย'])}
                               </td>

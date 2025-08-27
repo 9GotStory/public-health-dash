@@ -28,7 +28,6 @@ const getProgressClass = (percentage: number) => {
   if (percentage >= 60) return "bg-warning/20 [&>div]:bg-warning";
   return "bg-destructive/20 [&>div]:bg-destructive";
 };
-
 // Displays KPI details grouped by main and sub indicators.
 
 interface KPIDetailTableProps {

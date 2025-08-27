@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,40 +20,60 @@ interface FilterPanelProps {
 
 export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const itemClass = "whitespace-normal break-words line-clamp-2";
 
   // Utility class reused by all SelectItem entries
   const optionClass = "whitespace-normal break-words line-clamp-2";
 
   // Build cascading filter options based on current selections
-  const filteredByGroup = filters.selectedGroup
-    ? data.filter(item => item['ประเด็นขับเคลื่อน'] === filters.selectedGroup)
-    : data;
-  const filteredByMainKPI = filters.selectedMainKPI
-    ? filteredByGroup.filter(item => item['ตัวชี้วัดหลัก'] === filters.selectedMainKPI)
-    : filteredByGroup;
-  const filteredBySubKPI = filters.selectedSubKPI
-    ? filteredByMainKPI.filter(item => item['ตัวชี้วัดย่อย'] === filters.selectedSubKPI)
-    : filteredByMainKPI;
-  const filteredByTarget = filters.selectedTarget
-    ? filteredBySubKPI.filter(item => item['กลุ่มเป้าหมาย'] === filters.selectedTarget)
-    : filteredBySubKPI;
+  const filteredByGroup = useMemo(
+    () =>
+      filters.selectedGroup
+        ? data.filter(item => item['ประเด็นขับเคลื่อน'] === filters.selectedGroup)
+        : data,
+    [data, filters.selectedGroup]
+  );
+  const filteredByMainKPI = useMemo(
+    () =>
+      filters.selectedMainKPI
+        ? filteredByGroup.filter(item => item['ตัวชี้วัดหลัก'] === filters.selectedMainKPI)
+        : filteredByGroup,
+    [filteredByGroup, filters.selectedMainKPI]
+  );
+  const filteredBySubKPI = useMemo(
+    () =>
+      filters.selectedSubKPI
+        ? filteredByMainKPI.filter(item => item['ตัวชี้วัดย่อย'] === filters.selectedSubKPI)
+        : filteredByMainKPI,
+    [filteredByMainKPI, filters.selectedSubKPI]
+  );
+  const filteredByTarget = useMemo(
+    () =>
+      filters.selectedTarget
+        ? filteredBySubKPI.filter(item => item['กลุ่มเป้าหมาย'] === filters.selectedTarget)
+        : filteredBySubKPI,
+    [filteredBySubKPI, filters.selectedTarget]
+  );
 
-  const uniqueGroups = [
-    ...new Set(data.map(item => item['ประเด็นขับเคลื่อน']).filter(Boolean))
-  ];
-  const uniqueMainKPIs = [
-    ...new Set(filteredByGroup.map(item => item['ตัวชี้วัดหลัก']).filter(Boolean))
-  ];
-  const uniqueSubKPIs = [
-    ...new Set(filteredByMainKPI.map(item => item['ตัวชี้วัดย่อย']).filter(Boolean))
-  ];
-  const uniqueTargets = [
-    ...new Set(filteredBySubKPI.map(item => item['กลุ่มเป้าหมาย']).filter(Boolean))
-  ];
-  const uniqueServices = [
-    ...new Set(data.map(item => item['ชื่อหน่วยบริการ']).filter(Boolean))
-  ];
+  const uniqueGroups = useMemo(
+    () => [...new Set(data.map(item => item['ประเด็นขับเคลื่อน']).filter(Boolean))],
+    [data]
+  );
+  const uniqueMainKPIs = useMemo(
+    () => [...new Set(filteredByGroup.map(item => item['ตัวชี้วัดหลัก']).filter(Boolean))],
+    [filteredByGroup]
+  );
+  const uniqueSubKPIs = useMemo(
+    () => [...new Set(filteredByMainKPI.map(item => item['ตัวชี้วัดย่อย']).filter(Boolean))],
+    [filteredByMainKPI]
+  );
+  const uniqueTargets = useMemo(
+    () => [...new Set(filteredBySubKPI.map(item => item['กลุ่มเป้าหมาย']).filter(Boolean))],
+    [filteredBySubKPI]
+  );
+  const uniqueServices = useMemo(
+    () => [...new Set(data.map(item => item['ชื่อหน่วยบริการ']).filter(Boolean))],
+    [data]
+  );
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     const normalizedValue = value === 'all' ? '' : value;
@@ -150,7 +170,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               value={filters.selectedGroup} 
               onValueChange={(value) => handleFilterChange('selectedGroup', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full text-left">
                 <SelectValue placeholder="เลือกประเด็นขับเคลื่อน" />
               </SelectTrigger>
               <SelectContent className="bg-white">
@@ -177,7 +197,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               value={filters.selectedMainKPI} 
               onValueChange={(value) => handleFilterChange('selectedMainKPI', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full text-left">
                 <SelectValue placeholder="เลือกตัวชี้วัดหลัก" />
               </SelectTrigger>
               <SelectContent className="bg-white">
@@ -204,7 +224,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               value={filters.selectedSubKPI} 
               onValueChange={(value) => handleFilterChange('selectedSubKPI', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full text-left">
                 <SelectValue placeholder="เลือกตัวชี้วัดย่อย" />
               </SelectTrigger>
               <SelectContent className="bg-white">
@@ -231,7 +251,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               value={filters.selectedTarget} 
               onValueChange={(value) => handleFilterChange('selectedTarget', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full text-left">
                 <SelectValue placeholder="เลือกกลุ่มเป้าหมาย" />
               </SelectTrigger>
               <SelectContent className="bg-white">
@@ -258,7 +278,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
               value={filters.selectedService}
               onValueChange={(value) => handleFilterChange("selectedService", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full text-left">
                 <SelectValue placeholder="เลือกหน่วยบริการ" />
               </SelectTrigger>
               <SelectContent className="bg-white">

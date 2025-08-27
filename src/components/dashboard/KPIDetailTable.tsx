@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { KPIRecord, SummaryStats } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
+import { formatNumber, formatPercentage } from "@/lib/format";
 import {  
   AlertCircle,
   ChevronLeft,
@@ -74,6 +75,16 @@ const formatPercentage = (value: string | number | null | undefined) => {
   if (value === null || value === undefined || value === "") return "";
   const num = typeof value === "string" ? parseFloat(value) : value;
   return isNaN(num) ? "" : `${num.toFixed(2)}%`;
+};
+
+const getStatusBadge = (percentage: number, threshold: number) => {
+  if (percentage >= threshold) {
+    return <Badge variant="default" className="bg-success text-success-foreground">ผ่าน</Badge>;
+  }
+  if (percentage >= threshold * 0.8) {
+    return <Badge variant="default" className="bg-warning text-warning-foreground">ใกล้เป้า</Badge>;
+  }
+  return <Badge variant="destructive">ไม่ผ่าน</Badge>;
 };
 
 interface KPIDetailTableProps {

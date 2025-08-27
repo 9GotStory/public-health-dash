@@ -235,6 +235,10 @@ const Index = () => {
     const legacy = window as unknown as Record<string, unknown>;
     legacy.summary = stats;
     legacy.filteredSummary = stats;
+    // Provide a stub for legacy code expecting a global groupIcon reference
+    if (legacy.groupIcon === undefined) {
+      legacy.groupIcon = () => null;
+    }
   }
 
   return (

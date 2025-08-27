@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useMemo } from "react";
 import {
   ChevronRight,
   Brain,
@@ -35,12 +36,14 @@ interface KPIGroupCardsProps {
 
 export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps) => {
   // Group data by "ประเด็นขับเคลื่อน"
-  const groupedData = data.reduce((acc, item) => {
-    const group = item['ประเด็นขับเคลื่อน'];
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(item);
-    return acc;
-  }, {} as Record<string, KPIRecord[]>);
+  const groupedData = useMemo(() => {
+    return data.reduce((acc, item) => {
+      const group = item['ประเด็นขับเคลื่อน'];
+      if (!acc[group]) acc[group] = [];
+      acc[group].push(item);
+      return acc;
+    }, {} as Record<string, KPIRecord[]>);
+  }, [data]);
 
   const fallbackIcons: LucideIcon[] = [
     Activity,
@@ -60,7 +63,7 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
     Zap,
   ];
 
-  const iconMap = new Map<string, LucideIcon>();
+  const iconMap = useMemo(() => new Map<string, LucideIcon>(), []);
 
   const getGroupIcon = (groupName: string): LucideIcon => {
     if (groupName.includes('สุขภาพจิต')) {

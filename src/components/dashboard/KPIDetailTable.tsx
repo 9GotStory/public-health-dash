@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { KPIRecord, SummaryStats } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
-import {
+import {  
   AlertCircle,
   ChevronLeft,
   Eye,
@@ -15,6 +15,26 @@ import {
   Activity,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+
+const getStatusBadge = (percentage: number, threshold: number) => {
+  if (percentage >= threshold) {
+    return <Badge variant="default" className="bg-success text-success-foreground">ผ่าน</Badge>;
+  } else if (percentage >= threshold * 0.8) {
+    return <Badge variant="default" className="bg-warning text-warning-foreground">ใกล้เป้า</Badge>;
+  }
+  return <Badge variant="destructive">ไม่ผ่าน</Badge>;
+};
+
+const formatNumber = (value: string | number) => {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  return isNaN(num) ? value : num.toLocaleString();
+};
+
+const formatPercentage = (value: string | number | null | undefined) => {
+  if (value === null || value === undefined || value === "") return "";
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  return isNaN(num) ? "" : `${num.toFixed(2)}%`;
+};
 
 interface KPIDetailTableProps {
   data: KPIRecord[];
@@ -33,55 +53,19 @@ export const KPIDetailTable = ({
   onKPIInfoClick,
   onRawDataClick
 }: KPIDetailTableProps) => {
-  const [sortField, setSortField] = useState<keyof KPIRecord | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const groupStats = groupName ? summary?.groupStats[groupName] : undefined;
-  const totalKPIs = groupStats?.count ?? 0;
-  const averagePercentage = groupStats?.averagePercentage ?? 0;
-  const passedCount = groupStats?.passed ?? 0;
-  const IconComponent = groupIcon ?? Activity;
-
-  const getStatusColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-success';
-    if (percentage >= 60) return 'text-warning';
-    return 'text-destructive';
-  };
-
   // Group by main KPI first, then by sub KPI
-  const groupedData = data.reduce((acc, item) => {
-    const mainKPI = item['ตัวชี้วัดหลัก'];
-    const subKPI = item['ตัวชี้วัดย่อย'];
-    
-    if (!acc[mainKPI]) acc[mainKPI] = {};
-    if (!acc[mainKPI][subKPI]) acc[mainKPI][subKPI] = [];
-    acc[mainKPI][subKPI].push(item);
-    
-    return acc;
-  }, {} as Record<string, Record<string, KPIRecord[]>>);
+  const groupedData = useMemo(() => {
+    return data.reduce((acc, item) => {
+      const mainKPI = item['ตัวชี้วัดหลัก'];
+      const subKPI = item['ตัวชี้วัดย่อย'];
 
-  const getStatusBadge = (percentage: number, threshold: number) => {
-    if (percentage >= threshold) {
-      return <Badge variant="default" className="bg-success text-success-foreground">ผ่าน</Badge>;
-    } else if (percentage >= threshold * 0.8) {
-      return <Badge variant="default" className="bg-warning text-warning-foreground">ใกล้เป้า</Badge>;
-    } else {
-      return <Badge variant="destructive">ไม่ผ่าน</Badge>;
-    }
-  };
+      if (!acc[mainKPI]) acc[mainKPI] = {};
+      if (!acc[mainKPI][subKPI]) acc[mainKPI][subKPI] = [];
+      acc[mainKPI][subKPI].push(item);
 
-  const formatNumber = (value: string | number) => {
-    const num = typeof value === 'string' ? parseFloat(value) : value;
-    return isNaN(num) ? value : num.toLocaleString();
-  };
-
-  const formatPercentage = (value: string | number | null | undefined) => {
-    if (value === null || value === undefined || value === '') return '';
-    const num = typeof value === 'string' ? parseFloat(value) : value;
-    return isNaN(num) ? '' : `${num.toFixed(2)}%`;
-  };
+      return acc;
+    }, {} as Record<string, Record<string, KPIRecord[]>>);
+  }, [data]);
 
   return (
     <div className="space-y-6">
@@ -212,7 +196,7 @@ export const KPIDetailTable = ({
                               record.sheet_source?.trim() ||
                               (record as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
                             return (
-                              <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
+                              <tr key={record.service_code_ref || index} className="border-b hover:bg-muted/30 transition-colors">
                                 <td className="p-3 align-top">
                                   <div className="flex items-center space-x-2">
                                     <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />

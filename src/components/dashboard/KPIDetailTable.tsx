@@ -10,9 +10,17 @@ import {
   ChevronLeft,
   Eye,
   Info,
-  Table,
+  Table as TableIcon,
   Users,
 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface KPIDetailTableProps {
   data: KPIRecord[];
@@ -117,7 +125,7 @@ export const KPIDetailTable = ({
                             size="sm"
                             onClick={() => onRawDataClick(groupSheetSource)}
                           >
-                            <Table className="h-4 w-4 sm:mr-1" />
+                            <TableIcon className="h-4 w-4 sm:mr-1" />
                             <span className="hidden sm:inline">ข้อมูลทั้งหมด</span>
                           </Button>
                         )}
@@ -135,78 +143,91 @@ export const KPIDetailTable = ({
                     </div>
 
                   {/* Records Table */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b bg-muted/50">
-                          <th className="text-left p-3 font-medium">กลุ่มเป้าหมาย</th>
-                          <th className="text-left p-3 font-medium">หน่วยบริการ</th>
-                          <th className="text-right p-3 font-medium">เป้าหมาย</th>
-                          <th className="text-right p-3 font-medium">ผลงาน</th>
-                          <th className="text-right p-3 font-medium">ร้อยละ</th>
-                          <th className="text-right p-3 font-medium">เกณฑ์ผ่าน</th>
-                          <th className="text-center p-3 font-medium">สถานะ</th>
-                          <th className="text-center p-3 font-medium">การดำเนินการ</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {records.map((record, index) => {
-                          const percentage = calculatePercentage(record);
-                          const threshold = parseFloat(record['เกณฑ์ผ่าน (%)']?.toString() || '0');
-                          const hasResult = record['ผลงาน']?.toString().trim() !== '';
-                          const sheetSource =
-                            record.sheet_source?.trim() ||
-                            (record as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
-                          return (
-                            <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
-                              <td className="p-3 align-top">
-                                <div className="flex items-center space-x-2">
-                                  <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                  <span className="break-words">{record['กลุ่มเป้าหมาย']}</span>
-                                </div>
-                              </td>
-                              <td className="p-3 font-medium break-words">
-                                {record['ชื่อหน่วยบริการ']}
-                              </td>
-                              <td className="p-3 text-right font-mono">
-                                {formatNumber(record['เป้าหมาย'])}
-                              </td>
-                              <td className="p-3 text-right font-mono">
-                                {formatNumber(record['ผลงาน'])}
-                              </td>
-                              <td className="p-3 text-right">
-                                <div className="space-y-1">
-                                  <div className="font-semibold">{hasResult ? formatPercentage(percentage) : ''}</div>
-                                  <Progress value={Math.min(percentage ?? 0, 100)} className="h-1.5" />
-                                </div>
-                              </td>
-                              <td className="p-3 text-right font-mono text-muted-foreground">
-                                {formatPercentage(threshold)}
-                              </td>
-                              <td className="p-3 text-center">
-                                {percentage !== null && hasResult ? getStatusBadge(percentage, threshold) : '-'}
-                              </td>
-                              <td className="p-3">
-                                <div className="flex space-x-1 justify-center">
-                                  {sheetSource && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => onRawDataClick(sheetSource, record)}
-                                      title="เฉพาะหน่วยนี้"
-                                    >
-                                      <Eye className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-
+                  <Table className="min-w-max text-sm">
+                    <TableHeader className="bg-muted">
+                      <TableRow>
+                        <TableHead className="p-3 text-left font-medium border-r border-border min-w-[180px] last:border-r-0">
+                          กลุ่มเป้าหมาย
+                        </TableHead>
+                        <TableHead className="p-3 text-left font-medium border-r border-border min-w-[160px] last:border-r-0">
+                          หน่วยบริการ
+                        </TableHead>
+                        <TableHead className="p-3 text-right font-medium border-r border-border last:border-r-0">
+                          เป้าหมาย
+                        </TableHead>
+                        <TableHead className="p-3 text-right font-medium border-r border-border last:border-r-0">
+                          ผลงาน
+                        </TableHead>
+                        <TableHead className="p-3 text-right font-medium border-r border-border last:border-r-0">
+                          ร้อยละ
+                        </TableHead>
+                        <TableHead className="p-3 text-right font-medium border-r border-border last:border-r-0">
+                          เกณฑ์ผ่าน
+                        </TableHead>
+                        <TableHead className="p-3 text-center font-medium border-r border-border last:border-r-0">
+                          สถานะ
+                        </TableHead>
+                        <TableHead className="p-3 text-center font-medium last:border-r-0">
+                          การดำเนินการ
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {records.map((record, index) => {
+                        const percentage = calculatePercentage(record);
+                        const threshold = parseFloat(record['เกณฑ์ผ่าน (%)']?.toString() || '0');
+                        const hasResult = record['ผลงาน']?.toString().trim() !== '';
+                        const sheetSource =
+                          record.sheet_source?.trim() ||
+                          (record as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
+                        return (
+                          <TableRow key={index} className="hover:bg-muted/30">
+                            <TableCell className="p-3 align-top border-r border-border last:border-r-0">
+                              <div className="flex items-center space-x-2">
+                                <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <span className="break-words">{record['กลุ่มเป้าหมาย']}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-3 font-medium break-words border-r border-border last:border-r-0">
+                              {record['ชื่อหน่วยบริการ']}
+                            </TableCell>
+                            <TableCell className="p-3 text-right font-mono border-r border-border last:border-r-0">
+                              {formatNumber(record['เป้าหมาย'])}
+                            </TableCell>
+                            <TableCell className="p-3 text-right font-mono border-r border-border last:border-r-0">
+                              {formatNumber(record['ผลงาน'])}
+                            </TableCell>
+                            <TableCell className="p-3 text-right border-r border-border last:border-r-0">
+                              <div className="space-y-1">
+                                <div className="font-semibold">{hasResult ? formatPercentage(percentage) : ''}</div>
+                                <Progress value={Math.min(percentage ?? 0, 100)} className="h-1.5" />
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-3 text-right font-mono text-muted-foreground border-r border-border last:border-r-0">
+                              {formatPercentage(threshold)}
+                            </TableCell>
+                            <TableCell className="p-3 text-center border-r border-border last:border-r-0">
+                              {percentage !== null && hasResult ? getStatusBadge(percentage, threshold) : '-'}
+                            </TableCell>
+                            <TableCell className="p-3 last:border-r-0">
+                              <div className="flex space-x-1 justify-center">
+                                {sheetSource && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => onRawDataClick(sheetSource, record)}
+                                    title="เฉพาะหน่วยนี้"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                 </div>
               );
             })}

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Database, Download, Calendar, AlertCircle } from "lucide-react";
+import { Search, Database, Download, AlertCircle } from "lucide-react";
 import { KPIRecord } from "@/types/kpi";
 import { useSourceData } from "@/hooks/useKPIData";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -236,15 +236,14 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
               </div>
 
               {/* Summary Info */}
-              <div className="mt-4 pt-4 border-t text-xs text-muted-foreground flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span>รวม {filteredData.length} รายการ</span>
-                  <span className="hidden sm:inline">•</span>
+              <div className="mt-4 pt-4 border-t text-xs text-muted-foreground flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div className="flex flex-col">
+                  <span>{filteredData.length} รายการ</span>
                   <span>{headers.length} คอลัมน์</span>
                 </div>
-                <div className="flex items-center justify-end self-end sm:self-auto sm:ml-auto text-right">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  ดึงข้อมูลเมื่อ: {new Date().toLocaleString('th-TH')}
+                <div className="flex flex-col text-right sm:ml-auto sm:items-end">
+                  <span>ข้อมูล</span>
+                  <span>{new Date().toLocaleString('th-TH')}</span>
                 </div>
               </div>
             </div>

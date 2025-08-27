@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { KPIRecord } from "@/types/kpi";
+import { KPIRecord, SummaryStats } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
 import {  
   AlertCircle,
@@ -12,7 +12,9 @@ import {
   Info,
   Table as TableIcon,
   Users,
+  Activity,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 const getStatusBadge = (percentage: number, threshold: number) => {
   if (percentage >= threshold) {
@@ -37,6 +39,8 @@ const formatPercentage = (value: string | number | null | undefined) => {
 interface KPIDetailTableProps {
   data: KPIRecord[];
   groupName?: string;
+  groupIcon?: LucideIcon;
+  summary?: SummaryStats;
   onBack?: () => void;
   onKPIInfoClick: (kpiInfoId: string) => void;
   onRawDataClick: (sheetSource: string, record?: KPIRecord) => void;
@@ -85,6 +89,44 @@ export const KPIDetailTable = ({
           รวม {data.length} รายการ
         </div>
       </div>
+
+      {groupName && (
+        <Card className="p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-primary/10 rounded-lg text-primary flex-shrink-0">
+              <IconComponent className="h-6 w-6" />
+            </div>
+            <h3 className="font-semibold text-base sm:text-lg leading-tight break-words flex-1">
+              {groupName}
+            </h3>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center space-x-2">
+                <span className="text-muted-foreground">ตัวชี้วัด:</span>
+                <span className="font-medium">{totalKPIs}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-muted-foreground">ผ่าน:</span>
+                <span className={`font-medium ${getStatusColor(averagePercentage)}`}>
+                  {passedCount}/{totalKPIs}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">ความสำเร็จเฉลี่ย</span>
+                <span className={`text-lg font-bold ${getStatusColor(averagePercentage)}`}>
+                  {averagePercentage.toFixed(1)}%
+                </span>
+              </div>
+              <Progress value={Math.min(averagePercentage, 100)} className="h-2" />
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Main KPI Groups */}
       <div className="space-y-8">

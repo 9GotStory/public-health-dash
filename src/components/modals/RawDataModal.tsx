@@ -236,13 +236,14 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
               </div>
 
               {/* Summary Info */}
-              <div className="mt-4 pt-4 border-t text-xs text-muted-foreground flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                <div className="flex flex-col">
+              <div className="mt-4 pt-4 border-t text-xs text-muted-foreground flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                   <span>{filteredData.length} รายการ</span>
+                  <span className="hidden sm:inline">•</span>
                   <span>{headers.length} คอลัมน์</span>
                 </div>
-                <div className="flex flex-col text-right sm:ml-auto sm:items-end">
-                  <span>ข้อมูล</span>
+                <div className="flex items-center sm:ml-auto sm:justify-end text-right">
+                  <span className="mr-1">ข้อมูล</span>
                   <span>{new Date().toLocaleString('th-TH')}</span>
                 </div>
               </div>

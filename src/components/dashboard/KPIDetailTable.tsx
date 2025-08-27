@@ -255,7 +255,6 @@ export const KPIDetailTable = ({
                       </tbody>
                     </table>
                   </div>
-
                 </div>
               );
             })}

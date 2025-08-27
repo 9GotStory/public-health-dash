@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { calculatePercentage } from "@/lib/kpi";
 
 const calculateSummary = (data: KPIRecord[]): SummaryStats => {
-  const summary: SummaryStats = {
+  const stats: SummaryStats = {
     totalKPIs: 0,
     averagePercentage: 0,
     passedKPIs: 0,
@@ -49,12 +49,12 @@ const calculateSummary = (data: KPIRecord[]): SummaryStats => {
     const average = percentages.reduce((sum, p) => sum + p, 0) / percentages.length;
     const passed = average >= threshold;
 
-    summary.totalKPIs++;
-    summary.averagePercentage += average;
-    if (passed) summary.passedKPIs++; else summary.failedKPIs++;
+    stats.totalKPIs++;
+    stats.averagePercentage += average;
+    if (passed) stats.passedKPIs++; else stats.failedKPIs++;
 
-    if (!summary.groupStats[group]) {
-      summary.groupStats[group] = {
+    if (!stats.groupStats[group]) {
+      stats.groupStats[group] = {
         count: 0,
         totalPercentage: 0,
         passed: 0,
@@ -62,21 +62,21 @@ const calculateSummary = (data: KPIRecord[]): SummaryStats => {
         averagePercentage: 0,
       };
     }
-    const g = summary.groupStats[group];
+    const g = stats.groupStats[group];
     g.count++;
     g.totalPercentage += average;
     if (passed) g.passed++; else g.failed++;
   });
 
-  Object.values(summary.groupStats).forEach(g => {
+  Object.values(stats.groupStats).forEach(g => {
     g.averagePercentage = g.count > 0 ? g.totalPercentage / g.count : 0;
   });
 
-  summary.averagePercentage = summary.totalKPIs > 0
-    ? summary.averagePercentage / summary.totalKPIs
+  stats.averagePercentage = stats.totalKPIs > 0
+    ? stats.averagePercentage / stats.totalKPIs
     : 0;
 
-  return summary;
+  return stats;
 };
 
 const Index = () => {
@@ -225,14 +225,14 @@ const Index = () => {
 
   const basicFilteredData = applyBasicFilters(allData.configuration);
   const filteredData = applyStatusFilter(basicFilteredData);
-  const filteredSummary = calculateSummary(filteredData);
+  const summaryStats = calculateSummary(filteredData);
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Dashboard Header */}
         <DashboardHeader
-          summary={filteredSummary}
+          stats={summaryStats}
         />
 
         {/* Filter Panel */}
@@ -246,11 +246,11 @@ const Index = () => {
         {currentView === 'groups' ? (
           <KPIGroupCards
             data={filteredData}
-            summary={filteredSummary}
+            stats={summaryStats}
             onGroupClick={handleGroupClick}
           />
         ) : (
-          <KPIDetailTable 
+          <KPIDetailTable
             data={filteredData}
             groupName={selectedGroup}
             onBack={handleBackToGroups}

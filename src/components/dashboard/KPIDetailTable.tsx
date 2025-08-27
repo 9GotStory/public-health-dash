@@ -87,6 +87,9 @@ const getStatusBadge = (percentage: number, threshold: number) => {
   return <Badge variant="destructive">ไม่ผ่าน</Badge>;
 };
 
+// Displays KPI details grouped by main and sub indicators using shared
+// formatting and status helpers to avoid duplicate declarations.
+
 interface KPIDetailTableProps {
   data: KPIRecord[];
   groupName?: string;

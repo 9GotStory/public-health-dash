@@ -190,16 +190,15 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
         </div>
 
         {/* Data Table */}
-        <ScrollArea className="flex-1 px-6">
+        <div className="flex-1 px-6 overflow-auto">
           {filteredData.length > 0 ? (
             <div className="pb-6">
               <div className="border rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50 sticky top-0">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 sticky top-0">
                       <tr>
                         {headers.map((header, index) => (
-                          <th 
+                          <th
                             key={index}
                             className="text-left p-3 font-medium border-r border-border last:border-r-0 min-w-[120px]"
                           >
@@ -207,33 +206,32 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
                           </th>
                         ))}
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filteredData.map((row, rowIndex) => (
-                        <tr 
-                          key={rowIndex} 
-                          className="border-b hover:bg-muted/30 transition-colors"
-                        >
-                          {headers.map((header, colIndex) => {
-                            const value = row[header];
-                            const isNumber = !isNaN(Number(value)) && value !== '' && value !== null;
-                            
-                            return (
-                              <td 
-                                key={colIndex}
-                                className={`p-3 border-r border-border last:border-r-0 ${
-                                  isNumber ? 'text-right font-mono' : 'text-left'
-                                }`}
-                              >
-                                {value || '-'}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                  </thead>
+                  <tbody>
+                    {filteredData.map((row, rowIndex) => (
+                      <tr
+                        key={rowIndex}
+                        className="border-b hover:bg-muted/30 transition-colors"
+                      >
+                        {headers.map((header, colIndex) => {
+                          const value = row[header];
+                          const isNumber = !isNaN(Number(value)) && value !== '' && value !== null;
+
+                          return (
+                            <td
+                              key={colIndex}
+                              className={`p-3 border-r border-border last:border-r-0 ${
+                                isNumber ? 'text-right font-mono' : 'text-left'
+                              }`}
+                            >
+                              {value || '-'}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
               {/* Summary Info */}
@@ -256,9 +254,9 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
                 {viewData.length === 0 ? 'ไม่พบข้อมูลในแหล่งข้อมูลนี้' : 'ไม่พบข้อมูลที่ตรงกับการค้นหา'}
               </p>
               {searchTerm && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setSearchTerm('')}
                   className="mt-2"
                 >
@@ -267,7 +265,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
               )}
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         {/* Footer */}
         <div className="p-6 pt-0 flex justify-end">

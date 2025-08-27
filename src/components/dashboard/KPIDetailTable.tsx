@@ -228,7 +228,6 @@ export const KPIDetailTable = ({
                       })}
                     </TableBody>
                   </Table>
-
                 </div>
               );
             })}

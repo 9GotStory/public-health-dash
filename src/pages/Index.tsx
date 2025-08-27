@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useKPIData, useKPIInfo } from "@/hooks/useKPIData";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FilterPanel } from "@/components/dashboard/FilterPanel";
@@ -86,6 +87,7 @@ const Index = () => {
   // Navigation state
   const [currentView, setCurrentView] = useState<'groups' | 'detail'>('groups');
   const [selectedGroup, setSelectedGroup] = useState<string>('');
+  const [selectedGroupIcon, setSelectedGroupIcon] = useState<LucideIcon | null>(null);
   
   // Modal states
   const [showKPIInfo, setShowKPIInfo] = useState(false);
@@ -161,8 +163,9 @@ const Index = () => {
     });
   };
 
-  const handleGroupClick = (groupName: string) => {
+  const handleGroupClick = (groupName: string, icon: LucideIcon) => {
     setSelectedGroup(groupName);
+    setSelectedGroupIcon(icon);
     setFilters(prev => ({ ...prev, selectedGroup: groupName }));
     setCurrentView('detail');
   };
@@ -170,6 +173,7 @@ const Index = () => {
   const handleBackToGroups = () => {
     setCurrentView('groups');
     setSelectedGroup('');
+    setSelectedGroupIcon(null);
     setFilters(initialFilters);
   };
 
@@ -251,6 +255,8 @@ const Index = () => {
           <KPIDetailTable
             data={filteredData}
             groupName={selectedGroup}
+            groupIcon={selectedGroupIcon ?? undefined}
+            summary={filteredSummary}
             onBack={handleBackToGroups}
             onKPIInfoClick={handleKPIInfoClick}
             onRawDataClick={handleRawDataClick}

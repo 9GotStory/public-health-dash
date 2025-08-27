@@ -226,10 +226,11 @@ const Index = () => {
   const basicFilteredData = applyBasicFilters(allData.configuration);
   const filteredData = applyStatusFilter(basicFilteredData);
   const stats = calculateSummary(filteredData);
-  // Legacy alias for components expecting `filteredSummary`
-  const filteredSummary = stats;
+  // Legacy aliases for components expecting global summary objects
   if (typeof window !== "undefined") {
-    (window as unknown as Record<string, unknown>).filteredSummary = filteredSummary;
+    const legacy = window as unknown as Record<string, unknown>;
+    legacy.summary = stats;
+    legacy.filteredSummary = stats;
   }
 
   return (

@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Search, Database, Download, Calendar, AlertCircle } from "lucide-react";
 import { KPIRecord } from "@/types/kpi";
@@ -135,7 +134,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 space-y-4">
+        <div className="px-4 sm:px-6 space-y-4">
           {/* Info Card */}
           {record && (
             <Card className="p-4 bg-primary/5 border-primary/20">
@@ -167,9 +166,9 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
           )}
 
           {/* Search and Actions */}
-          <div className="flex items-center justify-between space-x-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="relative flex-1 w-full sm:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="ค้นหาในข้อมูล..."
                 value={searchTerm}
@@ -177,11 +176,11 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
                 className="pl-10"
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="text-xs">
+            <div className="flex items-center justify-between gap-2 w-full sm:w-auto">
+              <Badge variant="outline" className="text-xs whitespace-nowrap">
                 {filteredData.length} / {viewData.length} รายการ
               </Badge>
-              <Button variant="outline" size="sm" onClick={handleExport}>
+              <Button variant="outline" size="sm" onClick={handleExport} className="whitespace-nowrap">
                 <Download className="h-4 w-4 mr-1" />
                 Export Excel
               </Button>
@@ -190,16 +189,15 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
         </div>
 
         {/* Data Table */}
-        <ScrollArea className="flex-1 px-6">
+        <div className="flex-1 px-4 sm:px-6 min-h-0">
           {filteredData.length > 0 ? (
-            <div className="pb-6">
-              <div className="border rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50 sticky top-0">
+            <div className="pb-6 h-full flex flex-col min-h-0">
+              <div className="border rounded-lg flex-1 overflow-auto">
+                <table className="min-w-max w-full text-sm">
+                  <thead className="bg-muted/50 sticky top-0">
                       <tr>
                         {headers.map((header, index) => (
-                          <th 
+                          <th
                             key={index}
                             className="text-left p-3 font-medium border-r border-border last:border-r-0 min-w-[120px]"
                           >
@@ -207,40 +205,39 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
                           </th>
                         ))}
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filteredData.map((row, rowIndex) => (
-                        <tr 
-                          key={rowIndex} 
-                          className="border-b hover:bg-muted/30 transition-colors"
-                        >
-                          {headers.map((header, colIndex) => {
-                            const value = row[header];
-                            const isNumber = !isNaN(Number(value)) && value !== '' && value !== null;
-                            
-                            return (
-                              <td 
-                                key={colIndex}
-                                className={`p-3 border-r border-border last:border-r-0 ${
-                                  isNumber ? 'text-right font-mono' : 'text-left'
-                                }`}
-                              >
-                                {value || '-'}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                  </thead>
+                  <tbody>
+                    {filteredData.map((row, rowIndex) => (
+                      <tr
+                        key={rowIndex}
+                        className="border-b hover:bg-muted/30 transition-colors"
+                      >
+                        {headers.map((header, colIndex) => {
+                          const value = row[header];
+                          const isNumber = !isNaN(Number(value)) && value !== '' && value !== null;
+
+                          return (
+                            <td
+                              key={colIndex}
+                              className={`p-3 border-r border-border last:border-r-0 ${
+                                isNumber ? 'text-right font-mono' : 'text-left'
+                              }`}
+                            >
+                              {value || '-'}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
               {/* Summary Info */}
-              <div className="mt-4 pt-4 border-t text-xs text-muted-foreground flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+              <div className="mt-4 pt-4 border-t text-xs text-muted-foreground flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                   <span>รวม {filteredData.length} รายการ</span>
-                  <span>•</span>
+                  <span className="hidden sm:inline">•</span>
                   <span>{headers.length} คอลัมน์</span>
                 </div>
                 <div className="flex items-center">
@@ -256,9 +253,9 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
                 {viewData.length === 0 ? 'ไม่พบข้อมูลในแหล่งข้อมูลนี้' : 'ไม่พบข้อมูลที่ตรงกับการค้นหา'}
               </p>
               {searchTerm && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setSearchTerm('')}
                   className="mt-2"
                 >
@@ -267,7 +264,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
               )}
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         {/* Footer */}
         <div className="p-6 pt-0 flex justify-end">

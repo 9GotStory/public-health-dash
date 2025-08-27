@@ -230,13 +230,15 @@ const Index = () => {
   const basicFilteredData = applyBasicFilters(allData.configuration);
   const filteredData = applyStatusFilter(basicFilteredData);
   const summaryStats = calculateSummary(filteredData);
+  // Backward compatibility for components referencing the previous variable name
+  const filteredSummary = summaryStats;
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Dashboard Header */}
         <DashboardHeader
-          stats={summaryStats}
+          stats={filteredSummary}
         />
 
         {/* Filter Panel */}
@@ -250,7 +252,7 @@ const Index = () => {
         {currentView === 'groups' ? (
           <KPIGroupCards
             data={filteredData}
-            stats={summaryStats}
+            stats={filteredSummary}
             onGroupClick={handleGroupClick}
           />
         ) : (

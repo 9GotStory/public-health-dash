@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Search, Database, Download, Calendar, AlertCircle } from "lucide-react";
+import { Search, Database, Download, AlertCircle } from "lucide-react";
 import { KPIRecord } from "@/types/kpi";
 import { useSourceData } from "@/hooks/useKPIData";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,21 +47,28 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     });
   };
 
-  const viewData = viewMode === 'row' ? sourceData.filter(matchRecord) : sourceData;
+  const viewData = useMemo(
+    () => (viewMode === 'row' ? sourceData.filter(matchRecord) : sourceData),
+    [viewMode, sourceData, record]
+  );
 
   // Filter data based on search term
-  const filteredData = viewData.filter(row => {
-    if (!searchTerm) return true;
-    return Object.values(row).some(value =>
-      (value ?? '')
-        .toString()
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  });
+  const filteredData = useMemo(
+    () =>
+      viewData.filter(row => {
+        if (!searchTerm) return true;
+        return Object.values(row).some(value =>
+          (value ?? '')
+            .toString()
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+        );
+      }),
+    [viewData, searchTerm]
+  );
 
   // Get column headers
-  const headers = viewData.length > 0 ? Object.keys(viewData[0]) : [];
+  const headers = useMemo(() => (viewData.length > 0 ? Object.keys(viewData[0]) : []), [viewData]);
 
   const handleExport = () => {
     if (filteredData.length === 0) return;
@@ -78,10 +84,12 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     const html = `<table><thead><tr>${tableHeader}</tr></thead><tbody>${tableRows}</tbody></table>`;
 
     const blob = new Blob(['\uFEFF' + html], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
+    link.href = url;
     link.download = `${sheetSource}_${new Date().toISOString().split('T')[0]}.xls`;
     link.click();
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -90,7 +98,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
         <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)]">
           <DialogHeader className="sr-only">
             <DialogTitle>กำลังโหลดข้อมูล</DialogTitle>
-            <DialogDescription>กำลังโหลดข้อมูลดิบ</DialogDescription>
+            <DialogDescription>กำลังโหลดข้อมูล</DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -126,16 +134,18 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)] p-0 flex flex-col">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-xl font-bold flex items-center">
-            <Database className="h-5 w-5 mr-2" />
-            ข้อมูลดิบ: {sheetSource}
+          <DialogTitle className="text-xl font-bold flex flex-col sm:flex-row sm:items-center">
+            <span className="flex items-center">
+              <Database className="h-5 w-5 mr-2" />ข้อมูล:
+            </span>
+            <span className="sm:ml-2">{sheetSource}</span>
           </DialogTitle>
           <DialogDescription className="sr-only">
-            ข้อมูลดิบจาก {sheetSource}
+            ข้อมูลจาก {sheetSource}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 space-y-4">
+        <div className="px-4 sm:px-6 space-y-4">
           {/* Info Card */}
           {record && (
             <Card className="p-4 bg-primary/5 border-primary/20">
@@ -167,9 +177,9 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
           )}
 
           {/* Search and Actions */}
-          <div className="flex items-center justify-between space-x-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="relative flex-1 w-full sm:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="ค้นหาในข้อมูล..."
                 value={searchTerm}
@@ -177,11 +187,11 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
                 className="pl-10"
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="text-xs">
+            <div className="flex items-center justify-between gap-2 w-full sm:w-auto">
+              <Badge variant="outline" className="text-xs whitespace-nowrap">
                 {filteredData.length} / {viewData.length} รายการ
               </Badge>
-              <Button variant="outline" size="sm" onClick={handleExport}>
+              <Button variant="outline" size="sm" onClick={handleExport} className="whitespace-nowrap">
                 <Download className="h-4 w-4 mr-1" />
                 Export Excel
               </Button>
@@ -190,62 +200,60 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
         </div>
 
         {/* Data Table */}
-        <ScrollArea className="flex-1 px-6">
+        <div className="flex-1 px-4 sm:px-6 min-h-0">
           {filteredData.length > 0 ? (
-            <div className="pb-6">
-              <div className="border rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50 sticky top-0">
+            <div className="pb-6 h-full flex flex-col min-h-0">
+              <div className="border rounded-lg flex-1 overflow-auto">
+                <table className="min-w-max w-full text-sm">
+                  <thead className="bg-muted sticky top-0">
                       <tr>
-                        {headers.map((header, index) => (
-                          <th 
-                            key={index}
+                        {headers.map((header) => (
+                          <th
+                            key={header}
                             className="text-left p-3 font-medium border-r border-border last:border-r-0 min-w-[120px]"
                           >
                             {header}
                           </th>
                         ))}
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filteredData.map((row, rowIndex) => (
-                        <tr 
-                          key={rowIndex} 
-                          className="border-b hover:bg-muted/30 transition-colors"
-                        >
-                          {headers.map((header, colIndex) => {
-                            const value = row[header];
-                            const isNumber = !isNaN(Number(value)) && value !== '' && value !== null;
-                            
-                            return (
-                              <td 
-                                key={colIndex}
-                                className={`p-3 border-r border-border last:border-r-0 ${
-                                  isNumber ? 'text-right font-mono' : 'text-left'
-                                }`}
-                              >
-                                {value || '-'}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                  </thead>
+                  <tbody>
+                    {filteredData.map((row, rowIndex) => (
+                      <tr
+                        key={rowIndex}
+                        className="border-b hover:bg-muted/30 transition-colors"
+                      >
+                        {headers.map((header, colIndex) => {
+                          const value = row[header];
+                          const isNumber = !isNaN(Number(value)) && value !== '' && value !== null;
+
+                          return (
+                            <td
+                              key={header}
+                              className={`p-3 border-r border-border last:border-r-0 ${
+                                isNumber ? 'text-right font-mono' : 'text-left'
+                              }`}
+                            >
+                              {value || '-'}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
               {/* Summary Info */}
-              <div className="mt-4 pt-4 border-t text-xs text-muted-foreground flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <span>รวม {filteredData.length} รายการ</span>
-                  <span>•</span>
+              <div className="mt-4 pt-4 border-t text-xs text-muted-foreground flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <span>{filteredData.length} รายการ</span>
+                  <span className="hidden sm:inline">•</span>
                   <span>{headers.length} คอลัมน์</span>
                 </div>
-                <div className="flex items-center">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  ดึงข้อมูลเมื่อ: {new Date().toLocaleString('th-TH')}
+                <div className="flex items-center sm:ml-auto sm:justify-end text-right">
+                  <span className="mr-1">ข้อมูล</span>
+                  <span>{new Date().toLocaleString('th-TH')}</span>
                 </div>
               </div>
             </div>
@@ -256,9 +264,9 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
                 {viewData.length === 0 ? 'ไม่พบข้อมูลในแหล่งข้อมูลนี้' : 'ไม่พบข้อมูลที่ตรงกับการค้นหา'}
               </p>
               {searchTerm && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setSearchTerm('')}
                   className="mt-2"
                 >
@@ -267,7 +275,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
               )}
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         {/* Footer */}
         <div className="p-6 pt-0 flex justify-end">

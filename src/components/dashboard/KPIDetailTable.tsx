@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { KPIRecord, SummaryStats } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
 import { formatNumber, formatPercentage } from "@/lib/format";
-import {  
+import { StatusBadge } from "./StatusBadge";
+import {
   AlertCircle,
   ChevronLeft,
   Eye,
@@ -271,7 +271,11 @@ export const KPIDetailTable = ({
                                   {formatPercentage(threshold)}
                                 </td>
                                 <td className="p-3 text-center">
-                                  {percentage !== null && hasResult ? getStatusBadge(percentage, threshold) : '-'}
+                                  {percentage !== null && hasResult ? (
+                                    <StatusBadge percentage={percentage} threshold={threshold} />
+                                  ) : (
+                                    '-'
+                                  )}
                                 </td>
                                 <td className="p-3">
                                   <div className="flex space-x-1 justify-center">

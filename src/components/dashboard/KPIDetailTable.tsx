@@ -168,7 +168,7 @@ export const KPIDetailTable = ({
                             size="sm"
                             onClick={() => onRawDataClick(groupSheetSource)}
                           >
-                            <Table className="h-4 w-4 mr-0 sm:mr-1" />
+                            <TableIcon className="h-4 w-4 mr-0 sm:mr-1" />
                             <span className="hidden sm:inline">ข้อมูลทั้งหมด</span>
                           </Button>
                         )}

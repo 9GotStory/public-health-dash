@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { Suspense, useMemo, useState, useCallback } from "react";
 import { Loader2, Brain, Pill, Ribbon, Activity } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useKPIData, useKPIInfo } from "@/hooks/useKPIData";
@@ -15,8 +15,10 @@ import { FilterState, KPIRecord, SummaryStats } from "@/types/kpi";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { calculatePercentage, getAbsoluteStatus, getThresholdStatus } from "@/lib/kpi";
-import { calculateSummary } from "@/lib/summary";
+const GroupOverviewBarChartLazy = React.lazy(() => import('@/components/dashboard/charts/GroupOverviewBarChart').then(m => ({ default: m.GroupOverviewBarChart })));
+import { calculateSummary, calculateGroupOverviewByMain } from "@/lib/summary";
 import { deriveBackLevelFromTarget, deriveBackLevelFromDetail } from "@/lib/navigation";
+import { CompareGroupsControl } from "@/components/dashboard/CompareGroupsControl";
 
 // calculateSummary moved to src/lib/summary.ts
 
@@ -33,6 +35,8 @@ const Index = () => {
   const [selectedTarget, setSelectedTarget] = useState<string>('');
   const [skippedSubView, setSkippedSubView] = useState<boolean>(false);
   const [skippedMainView, setSkippedMainView] = useState<boolean>(false);
+  // Chart compare selection (multi-group selection just for the overview chart)
+  const [chartGroups, setChartGroups] = useState<string[]>([]);
   
   // Modal states
   const [showKPIInfo, setShowKPIInfo] = useState(false);
@@ -50,6 +54,37 @@ const Index = () => {
     statusFilters: []
   };
   const [filters, setFilters] = useState<FilterState>(initialFilters);
+
+  // Precompute group overview across ALL data (not filtered) using equal-weight by main KPI
+  const allStatsForChart = useMemo(() => {
+    try {
+      return calculateGroupOverviewByMain(allData?.configuration ?? []);
+    } catch {
+      return calculateGroupOverviewByMain([]);
+    }
+  }, [allData]);
+  const allGroupNamesForChart = useMemo(
+    () => Object.keys(allStatsForChart.groupStats || {}),
+    [allStatsForChart]
+  );
+  const toggleChartGroup = useCallback((name: string, checked: boolean) => {
+    setChartGroups(prev => {
+      const exists = prev.includes(name);
+      if (checked && !exists) return [...prev, name];
+      if (!checked && exists) return prev.filter(n => n !== name);
+      return prev;
+    });
+  }, []);
+
+  // Chart data computed outside of JSX for clarity and performance
+  const allChartData = useMemo(
+    () => Object.entries(allStatsForChart.groupStats || {}).map(([group, g]) => ({ name: group, avg: g.averagePercentage })),
+    [allStatsForChart]
+  );
+  const filteredChartData = useMemo(
+    () => (chartGroups.length > 0 ? allChartData.filter(d => chartGroups.includes(d.name)) : allChartData),
+    [allChartData, chartGroups]
+  );
 
   // Keep navigation state and filters in sync when filters change from the panel/tag removal
   const handleFiltersChange = (next: FilterState) => {
@@ -755,11 +790,34 @@ const Index = () => {
 
         {/* Main Content */}
         {currentView === 'groups' && (
-          <KPIGroupCards
-            data={filteredData}
-            stats={stats}
-            onGroupClick={handleGroupClick}
-          />
+          <>
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-sm text-muted-foreground">
+                  กราฟภาพรวมแสดงทุกประเด็น เริ่มต้นจะรวมทั้งหมดไว้ สามารถเลือกเปรียบเทียบได้
+                </div>
+                <CompareGroupsControl
+                  allGroups={allGroupNamesForChart}
+                  selected={chartGroups}
+                  onToggle={toggleChartGroup}
+                  onClear={() => setChartGroups([])}
+                  onSelectAll={() => setChartGroups(allGroupNamesForChart)}
+                  onReplace={(names) => setChartGroups(names)}
+                />
+              </div>
+              <Suspense fallback={<div className="w-full h-72" />}>
+                <GroupOverviewBarChartLazy
+                  data={filteredChartData}
+                  maxBars={filteredChartData.length}
+                />
+              </Suspense>
+            </div>
+            <KPIGroupCards
+              data={filteredData}
+              stats={stats}
+              onGroupClick={handleGroupClick}
+            />
+          </>
         )}
         {currentView === 'main' && (
           <MainKPICards

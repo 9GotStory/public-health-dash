@@ -28,6 +28,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { KPIRecord, SummaryStats } from "@/types/kpi";
 import { getStatusColorByThreshold, getProgressClassByThreshold, calculatePercentage } from "@/lib/kpi";
+import React from 'react';
 import { formatPercentage } from "@/lib/format";
 import { getStr, getNum } from "@/lib/data";
 import { F } from "@/lib/fields";

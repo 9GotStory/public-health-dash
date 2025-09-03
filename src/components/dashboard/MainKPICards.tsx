@@ -10,6 +10,8 @@ import { F } from "@/lib/fields";
 import { ChevronLeft, ChevronRight, Target, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { getStatusColorByThreshold, getProgressClassByThreshold } from "@/lib/kpi";
+import React, { Suspense } from 'react';
+const MainKPIBarChartLazy = React.lazy(() => import('./charts/MainKPIBarChart').then(m => ({ default: m.MainKPIBarChart })));
 import { ContextPath } from "./ContextPath";
 
 interface MainKPICardsProps {
@@ -104,6 +106,16 @@ export const MainKPICards = ({ data, groupName, groupIcon: GroupIcon, onBack, on
       </div>
 
       <ContextPath groupName={groupName} mainLabelOnly />
+
+      {/* Chart: compare main KPIs within this group */}
+      {(() => {
+        const items = Object.entries(mainStats).map(([main, s]) => ({ name: main, avg: s.avg, threshold: s.threshold }));
+        return items.length > 0 ? (
+          <Suspense fallback={<div className="w-full h-72" />}>
+            <MainKPIBarChartLazy data={items} />
+          </Suspense>
+        ) : null;
+      })()}
 
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

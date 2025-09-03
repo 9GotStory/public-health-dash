@@ -1,3 +1,4 @@
+import React from 'react';
 import { TargetBadges } from "./TargetBadges";
 
 interface ContextPathProps {

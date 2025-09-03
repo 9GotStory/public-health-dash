@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React, { Suspense, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -9,6 +9,7 @@ import { StatusBadge } from "./StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { ContextPath } from "./ContextPath";
 import { TargetBadges } from "./TargetBadges";
+const ServicesBarChartLazy = React.lazy(() => import('./charts/ServicesBarChart').then(m => ({ default: m.ServicesBarChart })));
 import { getStr, getNum, getSheetSource } from "@/lib/data";
 import { F } from "@/lib/fields";
 import {
@@ -163,7 +164,26 @@ export const KPIDetailTable = ({
                       </div>
                     </div>
 
-                    {/* Target groups summary moved to top path block */}
+                    {/* Services comparison chart (top N) */}
+                    {(() => {
+                      const items = records
+                        .map(r => {
+                          const pct = calculatePercentage(r);
+                          const hasResult = getStr(r, F.RESULT) !== '' && pct !== null;
+                          return hasResult ? {
+                            name: getStr(r, F.SERVICE_NAME) || '(ไม่ระบุ)',
+                            pct: pct as number,
+                            threshold,
+                          } : null;
+                        })
+                        .filter(Boolean) as { name: string; pct: number; threshold: number }[];
+                      items.sort((a, b) => (b.pct - a.pct));
+                      return items.length > 0 ? (
+                        <Suspense fallback={<div className="w-full h-80" />}>
+                          <ServicesBarChartLazy data={items} />
+                        </Suspense>
+                      ) : null;
+                    })()}
 
                     {/* Records Table */}
                     <div className="overflow-x-auto">

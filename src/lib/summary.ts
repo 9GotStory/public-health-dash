@@ -68,3 +68,65 @@ export const calculateSummary = (data: KPIRecord[]): SummaryStats => {
   return stats;
 };
 
+// Group overview focused on equal-weight averaging by "ตัวชี้วัดหลัก"
+// For each group: average across its main KPIs (each main KPI averaged across its sub KPIs).
+// Rows with blank ผลงาน are ignored in sub-KPI averaging; rows with invalid targets are skipped by calculatePercentage.
+export const calculateGroupOverviewByMain = (
+  data: KPIRecord[]
+): { groupStats: Record<string, { averagePercentage: number; totalMain: number; passedMain: number }> } => {
+  const byGroup: Record<string, Record<string, Record<string, KPIRecord[]>>> = {};
+
+  data.forEach((item) => {
+    const group = item['ประเด็นขับเคลื่อน']?.toString().trim();
+    const main = item['ตัวชี้วัดหลัก']?.toString().trim();
+    const sub = item['ตัวชี้วัดย่อย']?.toString().trim();
+    if (!group || !main) return;
+    if (!byGroup[group]) byGroup[group] = {} as Record<string, Record<string, KPIRecord[]>>;
+    if (!byGroup[group][main]) byGroup[group][main] = {} as Record<string, KPIRecord[]>;
+    const keySub = sub ?? '';
+    if (!byGroup[group][main][keySub]) byGroup[group][main][keySub] = [] as KPIRecord[];
+    byGroup[group][main][keySub].push(item);
+  });
+
+  const result: { groupStats: Record<string, { averagePercentage: number; totalMain: number; passedMain: number }> } = {
+    groupStats: {},
+  };
+
+  Object.entries(byGroup).forEach(([group, mainMap]) => {
+    const mainAverages: number[] = [];
+    const mainPassFlags: boolean[] = [];
+
+    Object.values(mainMap).forEach((subMap) => {
+      const subAverages: number[] = [];
+      const subPassFlags: boolean[] = [];
+      const subThresholds: number[] = [];
+
+      Object.values(subMap).forEach((recs) => {
+        const vals: number[] = [];
+        recs.forEach((r) => {
+          const p = calculatePercentage(r);
+          const hasResult = r['ผลงาน']?.toString().trim() !== '';
+          if (p !== null && hasResult) vals.push(p);
+        });
+        const avg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+        const th = parseFloat(recs[0]['เกณฑ์ผ่าน (%)']?.toString() || '0');
+        const normTh = isNaN(th) ? 0 : th;
+        subAverages.push(avg);
+        subThresholds.push(normTh);
+        subPassFlags.push(avg >= normTh);
+      });
+
+      const mainAvg = subAverages.length > 0 ? subAverages.reduce((a, b) => a + b, 0) / subAverages.length : 0;
+      const mainPassed = subPassFlags.length > 0 ? subPassFlags.every(Boolean) : false;
+      mainAverages.push(mainAvg);
+      mainPassFlags.push(mainPassed);
+    });
+
+    const totalMain = mainAverages.length;
+    const avgGroup = totalMain > 0 ? mainAverages.reduce((a, b) => a + b, 0) / totalMain : 0;
+    const passedMain = mainPassFlags.filter(Boolean).length;
+    result.groupStats[group] = { averagePercentage: avgGroup, totalMain, passedMain };
+  });
+
+  return result;
+};

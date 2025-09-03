@@ -8,6 +8,8 @@ import { ChevronLeft, ChevronRight, ListChecks, TrendingUp } from "lucide-react"
 import type { LucideIcon } from "lucide-react";
 import { getStatusColorByThreshold, getProgressClassByThreshold } from "@/lib/kpi";
 import { ContextPath } from "./ContextPath";
+import React, { Suspense } from 'react';
+const SubKPIBarChartLazy = React.lazy(() => import('./charts/SubKPIBarChart').then(m => ({ default: m.SubKPIBarChart })));
 import { formatPercentage } from "@/lib/format";
 import { getStr, getNum } from "@/lib/data";
 import { F } from "@/lib/fields";
@@ -73,6 +75,16 @@ export const SubKPICards = ({ data, groupName, mainKPIName, groupIcon: GroupIcon
       </div>
 
       <ContextPath groupName={groupName} mainKPIName={mainKPIName} subLabelOnly />
+
+      {/* Chart: compare sub KPIs within this main KPI */}
+      {(() => {
+        const items = Object.entries(subStats).map(([sub, s]) => ({ name: sub, avg: s.avg, threshold: s.threshold }));
+        return items.length > 0 ? (
+          <Suspense fallback={<div className="w-full h-72" />}>
+            <SubKPIBarChartLazy data={items} />
+          </Suspense>
+        ) : null;
+      })()}
 
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

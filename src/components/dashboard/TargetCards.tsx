@@ -6,8 +6,9 @@ import { KPIRecord } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
 import { ChevronLeft, ChevronRight, Flag, TrendingUp } from "lucide-react";
 import { ContextPath } from "./ContextPath";
-import { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { TargetBadges } from "./TargetBadges";
+const TargetComparisonChartLazy = React.lazy(() => import('./charts/TargetComparisonChart').then(m => ({ default: m.TargetComparisonChart })));
 import type { LucideIcon } from "lucide-react";
 import { getStatusColorByThreshold, getProgressClassByThreshold } from "@/lib/kpi";
 import { formatPercentage } from "@/lib/format";
@@ -80,13 +81,20 @@ export const TargetCards = ({ data, groupName, mainKPIName, subKPIName, groupIco
       </div>
 
       {/* Path + Target badges (same placement as detail page) */}
-        <ContextPath
-          groupName={groupName}
-          mainKPIName={mainKPIName}
-          subKPIName={subKPIName}
-          targets={uniqueTargets}
-          showBadges
+      <ContextPath
+        groupName={groupName}
+        mainKPIName={mainKPIName}
+        subKPIName={subKPIName}
+        targets={uniqueTargets}
+        showBadges
+      />
+
+      {/* Compare targets in this context (lazy) */}
+      <Suspense fallback={<div className="w-full h-72" />}>
+        <TargetComparisonChartLazy
+          data={Object.entries(stats).map(([target, s]) => ({ name: target, avg: s.avg, threshold: s.threshold }))}
         />
+      </Suspense>
 
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

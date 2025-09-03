@@ -1,52 +1,77 @@
 # Public Health Dashboard
 
-![โลโก้กระทรวงสาธารณสุข](public/moph-logo.svg)
+แดชบอร์ดสำหรับติดตาม “ตัวชี้วัด” ตามประเด็นขับเคลื่อนของคณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง ออกแบบให้ใช้งานง่ายบนมือถือ/แท็บเล็ต รองรับการกรองขั้นสูง การดูรายละเอียด และการดูข้อมูลดิบแบบเรียลไทม์
 
-Dashboard ติดตามประเด็นขับเคลื่อนตัวชี้วัดของคณะกรรมการประสานงานสาธารณสุขระดับอำเภอสอง
-This project provides an interactive dashboard for the Song District Public Health Coordinating Committee to track indicator-driven initiatives.
+## ภาพรวมการใช้งาน
+- กลุ่มมุมมอง: ประเด็นขับเคลื่อนหลัก → ตัวชี้วัดหลัก → ตัวชี้วัดย่อย → กลุ่มเป้าหมาย → รายละเอียดตัวชี้วัด
+- ฟิลเตอร์: กรองตามกลุ่ม/หลัก/ย่อย/กลุ่มเป้าหมาย/หน่วยบริการ และสถานะผลงาน (ผ่าน/ใกล้เป้า/ไม่ผ่าน)
+- ปุ่มกลับอัจฉริยะ: ย้อนระดับตามข้อมูลที่มีจริง (เช่น ถ้าไม่มี “ย่อย” จะกลับไป “หลัก” โดยอัตโนมัติ)
+- ข้อมูลดิบ: เปิดดูจากแหล่งข้อมูลพร้อมค้นหา/Export เป็น Excel ได้
 
-## Technologies
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## สีและเกณฑ์ผ่าน (สำคัญ)
+- สีของตัวเลข/แถบความคืบหน้าอ้างอิง “เกณฑ์ผ่าน (%)” ของแต่ละตัวชี้วัด
+  - ผ่าน: ค่าร้อยละ ≥ เกณฑ์ผ่าน → สีเขียว (success)
+  - ใกล้เป้า: ค่าร้อยละ ≥ 80% ของเกณฑ์ผ่าน → สีเหลือง (warning)
+  - ไม่ผ่าน: อื่นๆ → สีแดง (destructive)
+- กรณีไม่พบเกณฑ์ผ่านที่ถูกต้อง ระบบจะใช้เกณฑ์มาตรฐานแบบ absolute (≥80 ผ่าน, ≥60 ใกล้เป้า)
 
-## Getting Started
+## กลุ่มเป้าหมาย (Badges)
+- แสดงเป็น Badge ใต้เส้นทาง (path) ของแต่ละหน้า เพื่อไม่เกะกะในตาราง
+- Badge “ไม่ active” เป็นสีเทา, แบบ “active” (ตัวที่เลือกในหน้า รายละเอียด) เป็นสี primary
+- กด “แสดงทั้งหมด/ย่อ” เพื่อขยาย/ย่อรายการ เมื่อรายการยาวมาก แสดง “+N เพิ่มเติม”
 
-### Prerequisites
-- Node.js & npm (recommend using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
+## รายละเอียดตัวชี้วัด
+- แสดงเส้นทาง (กลุ่ม/หลัก/ย่อย/กลุ่มเป้าหมาย) และ Badge ด้านบนของหน้า
+- ส่วนหัวตาราง: แสดง “กลุ่มเป้าหมาย” ในบรรทัดเดียวกับ “เกณฑ์ผ่าน: …” (เมื่อมีข้อมูล)
+- ตาราง: หน่วยบริการ, เป้าหมาย, ผลงาน, ร้อยละ, สถานะ และดูข้อมูลดิบรายแถว
 
-### Installation
+## โครงสร้างโปรเจกต์ (สำคัญสำหรับผู้พัฒนา)
+- คอมโพเนนต์หลัก
+  - `src/components/dashboard/ContextPath.tsx` – เส้นทางบริบทและแสดงกลุ่มเป้าหมาย
+  - `src/components/dashboard/TargetBadges.tsx` – แสดง Badge กลุ่มเป้าหมาย (unique, toggle, tooltip)
+  - `src/components/dashboard/KPIDetailTable.tsx` – หน้ารายละเอียดตัวชี้วัด
+  - `src/components/dashboard/{KPIGroupCards,MainKPICards,SubKPICards,TargetCards}.tsx` – การ์ดในแต่ละระดับ
+- ฟังก์ชันธุรกิจ/ยูทิลิตี้
+  - `src/lib/kpi.ts` – คำนวณร้อยละและกำหนดสีตามเกณฑ์ผ่าน (พร้อม fallback)
+  - `src/lib/fields.ts` – รวบรวมชื่อฟิลด์ (ภาษาไทย) ไว้ที่เดียว ลดการ hardcode
+  - `src/lib/data.ts` – helper อ่านค่า string/number และแหล่งข้อมูล (sheet_source/แหล่งข้อมูล)
+  - `src/lib/navigation.ts` – ตรรกะปุ่ม “กลับ” เลือกระดับที่ถูกต้อง (target/sub/main)
+  - `src/lib/summary.ts` – สรุปภาพรวม (เฉลี่ย/ผ่าน/ไม่ผ่าน และรายกลุ่ม)
 
+## เริ่มต้นใช้งาน (นักพัฒนา)
+
+### เครื่องมือที่ใช้
+- Vite + React + TypeScript
+- Tailwind CSS + shadcn-ui
+
+### ติดตั้งและรัน
 ```sh
 git clone <YOUR_GIT_URL>
 cd public-health-dash
 npm install
-cp .env.example .env # then edit API base URL if needed
+cp .env.example .env   # ตั้งค่า API ถ้าจำเป็น
 npm run dev
 ```
 
-The development server will run with hot reload for instant preview.
+### คำสั่งอื่นๆ
+- `npm run build` – สร้างไฟล์สำหรับโปรดักชันใน `dist/`
+- `npm run lint` – ตรวจโค้ดด้วย ESLint
+- `npm test` – รันทดสอบอัตโนมัติ (Node test runner + tsx)
 
-### Other Scripts
+### ตัวแปรแวดล้อม
+- `VITE_API_BASE_URL` – จุดเชื่อมต่อ API (ดูตัวอย่างใน `.env.example`)
 
-- `npm run build` – build the project for production.
-- `npm run lint` – run linting.
+## การทดสอบ
+- มีเทสต์สำหรับฟังก์ชันหลัก เช่น เกณฑ์ผ่านและตรรกะปุ่ม “กลับ”
+  - `tests/threshold.test.js`
+  - `tests/navigation.test.js`
 
-### Environment Variables
+## การดีพลอย
+รัน `npm run build` แล้วนำโฟลเดอร์ `dist/` ไปวางบน Static Hosting ใดๆ ก็ได้
 
-This app reads the API base URL from Vite env variables.
+## แนวทางออกแบบ (สรุป)
+- เน้นสอดคล้องกันทุกหน้า: เส้นทาง + Badge, สีตามเกณฑ์ผ่าน, ปุ่มกลับตามลำดับมิติ
+- ลดการซ้ำซ้อน: รวมคีย์ฟิลด์และยูทิลิตี้ไว้ใน `src/lib/*` และคอมโพเนนต์ใช้ซ้ำ
+- รองรับมือถือ/แท็บเล็ต: Badge truncate บนจอแคบ ตารางเลื่อนแนวนอน
 
-- `VITE_API_BASE_URL` – Base URL for KPI API (default in `.env.example`).
-
-Create a `.env` file (or use OS env) to override:
-
-```
-VITE_API_BASE_URL=https://your-api.example.com/exec
-```
-
-## Deployment
-
-After running `npm run build`, deploy the contents of the `dist/` directory to any static hosting provider of your choice.
 

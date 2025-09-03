@@ -47,6 +47,12 @@ export const getThresholdStatus = (
   threshold: number
 ): 'passed' | 'near' | 'failed' => {
   if (percentage === null) return 'failed';
+  if (!isFinite(threshold) || threshold <= 0) {
+    // Fallback to absolute thresholds when KPI threshold is missing/invalid
+    if (percentage >= 80) return 'passed';
+    if (percentage >= 60) return 'near';
+    return 'failed';
+  }
   if (percentage >= threshold) return 'passed';
   if (percentage >= threshold * 0.8) return 'near';
   return 'failed';
@@ -59,4 +65,20 @@ export const getAbsoluteStatus = (
   if (percentage >= 80) return 'passed';
   if (percentage >= 60) return 'near';
   return 'failed';
+};
+
+// UI helper: text color based on KPI-specific threshold
+export const getStatusColorByThreshold = (percentage: number | null, threshold: number): string => {
+  const st = getThresholdStatus(percentage, threshold);
+  if (st === 'passed') return 'text-success';
+  if (st === 'near') return 'text-warning';
+  return 'text-destructive';
+};
+
+// UI helper: progress classes based on KPI-specific threshold
+export const getProgressClassByThreshold = (percentage: number | null, threshold: number): string => {
+  const st = getThresholdStatus(percentage, threshold);
+  if (st === 'passed') return 'bg-success/20 [&>div]:bg-success';
+  if (st === 'near') return 'bg-warning/20 [&>div]:bg-warning';
+  return 'bg-destructive/20 [&>div]:bg-destructive';
 };

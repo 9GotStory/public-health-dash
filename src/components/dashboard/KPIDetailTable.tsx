@@ -6,13 +6,17 @@ import { KPIRecord } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
 import { formatNumber, formatPercentage } from "@/lib/format";
 import { StatusBadge } from "./StatusBadge";
+import { Badge } from "@/components/ui/badge";
+import { ContextPath } from "./ContextPath";
+import { TargetBadges } from "./TargetBadges";
+import { getStr, getNum, getSheetSource } from "@/lib/data";
+import { F } from "@/lib/fields";
 import {
   AlertCircle,
   ChevronLeft,
   Eye,
   Info,
   Table as TableIcon,
-  Users,
   Activity,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -49,19 +53,17 @@ export const KPIDetailTable = ({
   onRawDataClick
 }: KPIDetailTableProps) => {
   const canNavigateToMain = useMemo(() => {
-    // Allow navigate to sub view only if there is any non-empty sub-KPI in data
-    return data.some((item) => (item['ตัวชี้วัดย่อย']?.toString().trim() || '') !== '');
+    return data.some((item) => getStr(item, F.SUB) !== '');
   }, [data]);
 
   const canNavigateToSub = useMemo(() => {
-    // Allow navigate to target view only if there is any non-empty target in data
-    return data.some((item) => (item['กลุ่มเป้าหมาย']?.toString().trim() || '') !== '');
+    return data.some((item) => getStr(item, F.TARGET) !== '');
   }, [data]);
   // Group by main KPI first, then by sub KPI
   const groupedData = useMemo(() => {
     return data.reduce((acc, item) => {
-      const mainKPI = item['ตัวชี้วัดหลัก'];
-      const subKPI = item['ตัวชี้วัดย่อย'];
+      const mainKPI = getStr(item, F.MAIN);
+      const subKPI = getStr(item, F.SUB);
 
       if (!acc[mainKPI]) acc[mainKPI] = {};
       if (!acc[mainKPI][subKPI]) acc[mainKPI][subKPI] = [];
@@ -75,7 +77,7 @@ export const KPIDetailTable = ({
 
   return (
     <div className="space-y-6">
-      {/* Header with Breadcrumb */}
+      {/* Header with Path */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {onBack && (
@@ -94,54 +96,14 @@ export const KPIDetailTable = ({
       </div>
 
       {(groupName || mainKPIName || subKPIName || targetName) && (
-        <nav aria-label="Breadcrumb" className="text-sm">
-          <div className="flex items-center text-muted-foreground flex-wrap gap-1">
-            {groupName && (
-              <button
-                type="button"
-                onClick={onNavigateToGroup}
-                className="text-primary hover:underline"
-                title="ไปที่ตัวชี้วัดหลัก"
-              >
-                {groupName}
-              </button>
-            )}
-            {mainKPIName && <span className="mx-1">/</span>}
-            {mainKPIName && (
-              canNavigateToMain && onNavigateToMain ? (
-                <button
-                  type="button"
-                  onClick={onNavigateToMain}
-                  className="text-primary hover:underline"
-                  title="ไปที่ตัวชี้วัดย่อย"
-                >
-                  ตัวชี้วัดหลัก: {mainKPIName}
-                </button>
-              ) : (
-                <span className="text-foreground">ตัวชี้วัดหลัก: {mainKPIName}</span>
-              )
-            )}
-            {subKPIName && <span className="mx-1">/</span>}
-            {subKPIName && (
-              canNavigateToSub && onNavigateToSub ? (
-                <button
-                  type="button"
-                  onClick={onNavigateToSub}
-                  className="text-primary hover:underline"
-                  title="ไปที่กลุ่มเป้าหมาย"
-                >
-                  ตัวชี้วัดย่อย: {subKPIName}
-                </button>
-              ) : (
-                <span className="text-foreground">ตัวชี้วัดย่อย: {subKPIName}</span>
-              )
-            )}
-            {targetName && <span className="mx-1">/</span>}
-            {targetName && (
-              <span className="text-foreground">กลุ่มเป้าหมาย: {targetName}</span>
-            )}
-          </div>
-        </nav>
+        <ContextPath
+          groupName={groupName}
+          mainKPIName={mainKPIName}
+          subKPIName={subKPIName}
+          targetName={targetName}
+          targets={data.map(r => (r['กลุ่มเป้าหมาย']?.toString().trim() || '')).filter(Boolean)}
+          showBadges={!targetName}
+        />
       )}
 
       {/* Main KPI Groups */}
@@ -156,13 +118,20 @@ export const KPIDetailTable = ({
             {/* Sub KPI Groups */}
             <div className="space-y-6">
               {Object.entries(subKPIGroups).map(([subKPI, records]) => {
-                const groupSheetSource =
-                  records[0]?.sheet_source?.trim() ||
-                  (records[0] as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
+                const groupSheetSource = getSheetSource(records[0]);
 
-                const threshold = parseFloat(
-                  records[0]['เกณฑ์ผ่าน (%)']?.toString() || '0'
+                const threshold = getNum(records[0], F.THRESHOLD) || 0;
+
+                // Determine display target for this sub-group (use selected target if provided; otherwise only if unique)
+                const uniqueTargetsForGroup = Array.from(
+                  new Set(
+                    records
+                      .map((r) => (r['กลุ่มเป้าหมาย']?.toString().trim() || ''))
+                      .filter(Boolean)
+                  )
                 );
+                const displayTarget = (targetName?.trim() || '') || (uniqueTargetsForGroup.length === 1 ? uniqueTargetsForGroup[0] : '');
+                const isActiveHeaderBadge = !!targetName && displayTarget === targetName;
 
                 return (
                   <Card key={subKPI} className="p-4 space-y-4">
@@ -194,20 +163,30 @@ export const KPIDetailTable = ({
                       </div>
                     </div>
 
+                    {/* Target groups summary moved to top path block */}
+
                     {/* Records Table */}
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr>
-                            <th
-                              colSpan={7}
-                              className="p-3 text-right font-medium text-muted-foreground"
-                            >
-                              เกณฑ์ผ่าน: {formatPercentage(threshold)}
+                            <th colSpan={6} className="p-3">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-muted-foreground">
+                                {displayTarget ? (
+                                  <div className="flex items-center gap-2">
+                                    <span className="whitespace-nowrap">กลุ่มเป้าหมาย:</span>
+                                    <TargetBadges items={[displayTarget]} active={isActiveHeaderBadge ? displayTarget : undefined} />
+                                  </div>
+                                ) : (
+                                  <span className="sr-only">ไม่มีข้อมูลกลุ่มเป้าหมาย</span>
+                                )}
+                                <div className="text-right font-medium">
+                                  เกณฑ์ผ่าน: {formatPercentage(threshold)}
+                                </div>
+                              </div>
                             </th>
                           </tr>
                           <tr className="border-b bg-muted/50">
-                            <th className="text-left p-3 font-medium">กลุ่มเป้าหมาย</th>
                             <th className="text-left p-3 font-medium">หน่วยบริการ</th>
                             <th className="text-right p-3 font-medium">เป้าหมาย</th>
                             <th className="text-right p-3 font-medium">ผลงาน</th>
@@ -219,21 +198,13 @@ export const KPIDetailTable = ({
                         <tbody>
                           {records.map((record, index) => {
                             const percentage = calculatePercentage(record);
-                            const hasResult = record['ผลงาน']?.toString().trim() !== '';
-                            const sheetSource =
-                              record.sheet_source?.trim() ||
-                              (record as Record<string, string | undefined>)['แหล่งข้อมูล']?.trim();
-                            return (
-                              <tr
-                                key={record.service_code_ref || index}
-                                className="border-b hover:bg-muted/30 transition-colors"
-                              >
-                                <td className="p-3 align-top">
-                                  <div className="flex items-center space-x-2">
-                                    <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                    <span className="break-words">{record['กลุ่มเป้าหมาย']}</span>
-                                  </div>
-                                </td>
+                            const hasResult = getStr(record, F.RESULT) !== '';
+                            const sheetSource = getSheetSource(record);
+                           return (
+                             <tr
+                               key={record.service_code_ref || index}
+                               className="border-b hover:bg-muted/30 transition-colors"
+                             >
                                 <td className="p-3 font-medium break-words">
                                   {record['ชื่อหน่วยบริการ']}
                                 </td>

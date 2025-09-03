@@ -15,73 +15,10 @@ import { FilterState, KPIRecord, SummaryStats } from "@/types/kpi";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { calculatePercentage, getAbsoluteStatus, getThresholdStatus } from "@/lib/kpi";
+import { calculateSummary } from "@/lib/summary";
+import { deriveBackLevelFromTarget, deriveBackLevelFromDetail } from "@/lib/navigation";
 
-const calculateSummary = (data: KPIRecord[]): SummaryStats => {
-  const stats: SummaryStats = {
-    totalKPIs: 0,
-    averagePercentage: 0,
-    passedKPIs: 0,
-    failedKPIs: 0,
-    groupStats: {},
-  };
-
-  const kpiMap: Record<string, {
-    group: string;
-    threshold: number;
-    percentages: number[];
-  }> = {};
-
-  data.forEach(item => {
-    const percentage = calculatePercentage(item);
-    if (percentage === null) return;
-
-    const key = item.kpi_info_id ||
-      `${item['ตัวชี้วัดหลัก']}|${item['ตัวชี้วัดย่อย']}|${item['กลุ่มเป้าหมาย']}`;
-
-    if (!kpiMap[key]) {
-      kpiMap[key] = {
-        group: item['ประเด็นขับเคลื่อน'],
-        threshold: parseFloat(item['เกณฑ์ผ่าน (%)']?.toString() || '0'),
-        percentages: [],
-      };
-    }
-
-    kpiMap[key].percentages.push(percentage);
-  });
-
-  Object.values(kpiMap).forEach(({ group, threshold, percentages }) => {
-    const average = percentages.reduce((sum, p) => sum + p, 0) / percentages.length;
-    const passed = average >= threshold;
-
-    stats.totalKPIs++;
-    stats.averagePercentage += average;
-    if (passed) stats.passedKPIs++; else stats.failedKPIs++;
-
-    if (!stats.groupStats[group]) {
-      stats.groupStats[group] = {
-        count: 0,
-        totalPercentage: 0,
-        passed: 0,
-        failed: 0,
-        averagePercentage: 0,
-      };
-    }
-    const g = stats.groupStats[group];
-    g.count++;
-    g.totalPercentage += average;
-    if (passed) g.passed++; else g.failed++;
-  });
-
-  Object.values(stats.groupStats).forEach(g => {
-    g.averagePercentage = g.count > 0 ? g.totalPercentage / g.count : 0;
-  });
-
-  stats.averagePercentage = stats.totalKPIs > 0
-    ? stats.averagePercentage / stats.totalKPIs
-    : 0;
-
-  return stats;
-};
+// calculateSummary moved to src/lib/summary.ts
 
 const Index = () => {
   const { allData, loading, error, refetch } = useKPIData();
@@ -558,6 +495,9 @@ const Index = () => {
     setShowRawData(true);
   };
 
+  // Back navigation helpers (pure in lib/navigation)
+  
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -841,36 +781,45 @@ const Index = () => {
             onSubKPIClick={handleSubKPIClick}
           />
         )}
-        {currentView === 'target' && (
-          <TargetCards
-            data={filteredData.filter(i => i['ประเด็นขับเคลื่อน'] === selectedGroup && i['ตัวชี้วัดหลัก'] === selectedMainKPI && (!selectedSubKPI || i['ตัวชี้วัดย่อย'] === selectedSubKPI))}
-            groupName={selectedGroup}
-            mainKPIName={selectedMainKPI}
-            subKPIName={selectedSubKPI}
-            groupIcon={selectedGroupIcon ?? undefined}
-            onBack={selectedSubKPI ? handleBackToSub : (skippedMainView ? handleBackToGroups : handleBackToMain)}
-            onNavigateToGroups={handleBackToGroups}
-            onNavigateToMain={handleBackToMain}
-            onNavigateToSub={selectedSubKPI ? handleBackToSub : undefined}
-            onTargetClick={handleTargetClick}
-          />
-        )}
-        {currentView === 'detail' && (
-          <KPIDetailTable
-            data={filteredData.filter(i => (!selectedGroup || i['ประเด็นขับเคลื่อน'] === selectedGroup) && (!selectedMainKPI || i['ตัวชี้วัดหลัก'] === selectedMainKPI) && (!selectedSubKPI || i['ตัวชี้วัดย่อย'] === selectedSubKPI) && (!selectedTarget || i['กลุ่มเป้าหมาย'] === selectedTarget))}
-            groupName={selectedGroup}
-            groupIcon={selectedGroupIcon ?? undefined}
-            mainKPIName={selectedMainKPI}
-            subKPIName={selectedSubKPI}
-            targetName={selectedTarget}
-            onBack={selectedTarget ? handleBackToTarget : (selectedSubKPI ? (skippedSubView ? handleBackToMain : handleBackToSubClearingSub) : (skippedMainView ? handleBackToGroups : handleBackToMain))}
-            onNavigateToGroup={handleBackToMain}
-            onNavigateToMain={handleBackToSub}
-            onNavigateToSub={handleBackToTarget}
-            onKPIInfoClick={handleKPIInfoClick}
-            onRawDataClick={handleRawDataClick}
-          />
-        )}
+        {currentView === 'target' && (() => {
+          const backLevel = deriveBackLevelFromTarget(allData?.configuration ?? [], selectedGroup, selectedMainKPI);
+          const onBackFn = backLevel === 'sub' ? handleBackToSub : handleBackToMain;
+          return (
+            <TargetCards
+              data={filteredData.filter(i => i['ประเด็นขับเคลื่อน'] === selectedGroup && i['ตัวชี้วัดหลัก'] === selectedMainKPI && (!selectedSubKPI || i['ตัวชี้วัดย่อย'] === selectedSubKPI))}
+              groupName={selectedGroup}
+              mainKPIName={selectedMainKPI}
+              subKPIName={selectedSubKPI}
+              groupIcon={selectedGroupIcon ?? undefined}
+              onBack={onBackFn}
+              onNavigateToGroups={handleBackToGroups}
+              onNavigateToMain={handleBackToMain}
+              onNavigateToSub={backLevel === 'sub' ? handleBackToSub : undefined}
+              onTargetClick={handleTargetClick}
+            />
+          );
+        })()}
+        {currentView === 'detail' && (() => {
+          const dataForDetail = filteredData.filter(i => (!selectedGroup || i['ประเด็นขับเคลื่อน'] === selectedGroup) && (!selectedMainKPI || i['ตัวชี้วัดหลัก'] === selectedMainKPI) && (!selectedSubKPI || i['ตัวชี้วัดย่อย'] === selectedSubKPI) && (!selectedTarget || i['กลุ่มเป้าหมาย'] === selectedTarget));
+          const backLevel = deriveBackLevelFromDetail(allData?.configuration ?? [], selectedGroup, selectedMainKPI, selectedSubKPI || undefined);
+          const onBackFn = backLevel === 'target' ? handleBackToTarget : backLevel === 'sub' ? handleBackToSub : handleBackToMain;
+          return (
+            <KPIDetailTable
+              data={dataForDetail}
+              groupName={selectedGroup}
+              groupIcon={selectedGroupIcon ?? undefined}
+              mainKPIName={selectedMainKPI}
+              subKPIName={selectedSubKPI}
+              targetName={selectedTarget}
+              onBack={onBackFn}
+              onNavigateToGroup={handleBackToMain}
+              onNavigateToMain={handleBackToSub}
+              onNavigateToSub={handleBackToTarget}
+              onKPIInfoClick={handleKPIInfoClick}
+              onRawDataClick={handleRawDataClick}
+            />
+          );
+        })()}
 
         {/* Modals */}
         <KPIInfoModal 

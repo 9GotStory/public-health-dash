@@ -27,7 +27,10 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { KPIRecord, SummaryStats } from "@/types/kpi";
-import { getStatusColor, getProgressClass, calculatePercentage } from "@/lib/kpi";
+import { getStatusColorByThreshold, getProgressClassByThreshold, calculatePercentage } from "@/lib/kpi";
+import { formatPercentage } from "@/lib/format";
+import { getStr, getNum } from "@/lib/data";
+import { F } from "@/lib/fields";
 
 interface KPIGroupCardsProps {
   data: KPIRecord[];
@@ -98,8 +101,8 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
           // passedCount: number of main KPIs where all sub-KPIs pass their thresholds
           // averagePercentage: average of per-main averages (each main's avg is the average of its sub-KPIs' first-row percentages)
           const byMain: Record<string, Record<string, KPIRecord[]>> = records.reduce((m, item) => {
-            const main = item['ตัวชี้วัดหลัก'];
-            const sub = item['ตัวชี้วัดย่อย'];
+            const main = getStr(item, F.MAIN);
+            const sub = getStr(item, F.SUB);
             if (!m[main]) m[main] = {} as Record<string, KPIRecord[]>;
             if (!m[main][sub]) m[main][sub] = [];
             m[main][sub].push(item);
@@ -108,29 +111,35 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
 
           // Compute per-main averages and pass flags using first-row percentage per sub-KPI
           const perMainAverages: number[] = [];
+          const perMainThresholds: number[] = [];
           const mainPassFlags: boolean[] = [];
           Object.values(byMain).forEach(subMap => {
             const subAverages: number[] = [];
+            const subThresholds: number[] = [];
             let subAllPass = true;
             Object.values(subMap).forEach(recs => {
               const vals: number[] = [];
               recs.forEach(r => {
                 const p = calculatePercentage(r);
-                const hasResult = r['ผลงาน']?.toString().trim() !== '';
+                const hasResult = getStr(r, F.RESULT) !== '';
                 if (p !== null && hasResult) vals.push(p);
               });
               const avg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-              const th = parseFloat(recs[0]['เกณฑ์ผ่าน (%)']?.toString() || '0');
+              const th = getNum(recs[0], F.THRESHOLD) || 0;
               if (avg < th) subAllPass = false;
               subAverages.push(avg);
+              subThresholds.push(isNaN(th) ? 0 : th);
             });
             const avgMain = subAverages.length > 0 ? subAverages.reduce((a, b) => a + b, 0) / subAverages.length : 0;
+            const thMain = subThresholds.length > 0 ? subThresholds.reduce((a, b) => a + b, 0) / subThresholds.length : 0;
             perMainAverages.push(avgMain);
+            perMainThresholds.push(thMain);
             mainPassFlags.push(subAllPass);
           });
 
           const totalCount = Object.keys(byMain).length;
           const averagePercentage = perMainAverages.length > 0 ? perMainAverages.reduce((a, b) => a + b, 0) / perMainAverages.length : 0;
+          const averageThreshold = perMainThresholds.length > 0 ? perMainThresholds.reduce((a, b) => a + b, 0) / perMainThresholds.length : 0;
           const passedCount = mainPassFlags.filter(Boolean).length;
           const GroupIcon = getGroupIcon(groupName);
 
@@ -163,7 +172,7 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-muted-foreground">ผ่าน:</span>
-                    <span className={`font-medium ${getStatusColor(averagePercentage)}`}>
+                    <span className={`font-medium ${getStatusColorByThreshold(averagePercentage, averageThreshold)}`}>
                       {passedCount}/{totalCount}
                     </span>
                   </div>
@@ -172,14 +181,14 @@ export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps)
                 {/* Progress Bar */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">ความสำเร็จเฉลี่ย</span>
-                    <span className={`text-lg font-bold ${getStatusColor(averagePercentage)}`}>
-                      {averagePercentage.toFixed(1)}%
+                    <span className="text-sm text-muted-foreground">ร้อยละเฉลี่ย</span>
+                    <span className={`text-lg font-bold ${getStatusColorByThreshold(averagePercentage, averageThreshold)}`}>
+                      {formatPercentage(averagePercentage)}
                     </span>
                   </div>
                   <Progress
                     value={Math.min(averagePercentage, 100)}
-                    className={`h-2 ${getProgressClass(averagePercentage)}`}
+                    className={`h-2 ${getProgressClassByThreshold(averagePercentage, averageThreshold)}`}
                   />
                 </div>
 

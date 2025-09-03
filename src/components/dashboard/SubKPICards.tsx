@@ -6,7 +6,11 @@ import { KPIRecord } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
 import { ChevronLeft, ChevronRight, ListChecks, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { getStatusColor, getProgressClass } from "@/lib/kpi";
+import { getStatusColorByThreshold, getProgressClassByThreshold } from "@/lib/kpi";
+import { ContextPath } from "./ContextPath";
+import { formatPercentage } from "@/lib/format";
+import { getStr, getNum } from "@/lib/data";
+import { F } from "@/lib/fields";
 
 interface SubKPICardsProps {
   data: KPIRecord[];
@@ -22,7 +26,7 @@ export const SubKPICards = ({ data, groupName, mainKPIName, groupIcon: GroupIcon
   const subStats = useMemo(() => {
     const acc: Record<string, { avg: number; threshold: number }> = {};
     const grouped = data.reduce((m, item) => {
-      const sub = item['ตัวชี้วัดย่อย'];
+      const sub = getStr(item, F.SUB);
       if (!m[sub]) m[sub] = [] as KPIRecord[];
       m[sub].push(item);
       return m;
@@ -33,11 +37,11 @@ export const SubKPICards = ({ data, groupName, mainKPIName, groupIcon: GroupIcon
       const vals: number[] = [];
       records.forEach(r => {
         const p = calculatePercentage(r);
-        const hasResult = r['ผลงาน']?.toString().trim() !== '';
+        const hasResult = getStr(r, F.RESULT) !== '';
         if (p !== null && hasResult) vals.push(p);
       });
       const avg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-      const th = parseFloat(records[0]['เกณฑ์ผ่าน (%)']?.toString() || '0');
+      const th = getNum(records[0], F.THRESHOLD) || 0;
       acc[sub] = { avg, threshold: th };
     });
 
@@ -62,33 +66,13 @@ export const SubKPICards = ({ data, groupName, mainKPIName, groupIcon: GroupIcon
             )}
             <div className="min-w-0">
               <h2 className="text-xl sm:text-2xl font-bold break-words">ตัวชี้วัดย่อย</h2>
-              <nav aria-label="Breadcrumb" className="text-sm mt-1">
-                <div className="flex items-center text-muted-foreground flex-wrap gap-1">
-                  <button
-                    type="button"
-                    onClick={onNavigateToGroups ?? onBack}
-                    className="text-primary hover:underline"
-                    title="ไปที่ประเด็นขับเคลื่อนหลัก"
-                  >
-                    {groupName}
-                  </button>
-                  <span className="mx-1">/</span>
-                  <button
-                    type="button"
-                    onClick={onBack}
-                    className="text-primary hover:underline"
-                    title="ไปที่ตัวชี้วัดหลัก"
-                  >
-                    ตัวชี้วัดหลัก: {mainKPIName}
-                  </button>
-                  <span className="mx-1">/</span>
-                  <span className="text-foreground">ตัวชี้วัดย่อย</span>
-                </div>
-              </nav>
             </div>
           </div>
         </div>
+
       </div>
+
+      <ContextPath groupName={groupName} mainKPIName={mainKPIName} subLabelOnly />
 
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -113,10 +97,10 @@ export const SubKPICards = ({ data, groupName, mainKPIName, groupIcon: GroupIcon
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">ร้อยละ</span>
-                  <span className={`text-lg font-bold ${getStatusColor(s.avg)}`}>{s.avg.toFixed(1)}%</span>
+                  <span className="text-sm text-muted-foreground">ร้อยละเฉลี่ย</span>
+                  <span className={`text-lg font-bold ${getStatusColorByThreshold(s.avg, s.threshold)}`}>{formatPercentage(s.avg)}</span>
                 </div>
-                <Progress value={Math.min(s.avg, 100)} className={`h-2 ${getProgressClass(s.avg)}`} />
+                <Progress value={Math.min(s.avg, 100)} className={`h-2 ${getProgressClassByThreshold(s.avg, s.threshold)}`} />
               </div>
 
               <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all" size="sm">

@@ -5,8 +5,14 @@ import { Progress } from "@/components/ui/progress";
 import { KPIRecord } from "@/types/kpi";
 import { calculatePercentage } from "@/lib/kpi";
 import { ChevronLeft, ChevronRight, Flag, TrendingUp } from "lucide-react";
+import { ContextPath } from "./ContextPath";
+import { useState } from "react";
+import { TargetBadges } from "./TargetBadges";
 import type { LucideIcon } from "lucide-react";
-import { getStatusColor, getProgressClass } from "@/lib/kpi";
+import { getStatusColorByThreshold, getProgressClassByThreshold } from "@/lib/kpi";
+import { formatPercentage } from "@/lib/format";
+import { getStr, getNum } from "@/lib/data";
+import { F } from "@/lib/fields";
 
 interface TargetCardsProps {
   data: KPIRecord[];
@@ -22,24 +28,29 @@ interface TargetCardsProps {
 }
 
 export const TargetCards = ({ data, groupName, mainKPIName, subKPIName, groupIcon: GroupIcon, onBack, onTargetClick, onNavigateToGroups, onNavigateToMain, onNavigateToSub }: TargetCardsProps) => {
+  const uniqueTargets = useMemo(
+    () => Array.from(new Set(data.map(i => (i['กลุ่มเป้าหมาย']?.toString().trim() || '')).filter(Boolean))),
+    [data]
+  );
   const stats = useMemo(() => {
     const grouped = data.reduce((m, item) => {
-      const target = item['กลุ่มเป้าหมาย'];
+      const target = getStr(item, F.TARGET);
       if (!m[target]) m[target] = [] as KPIRecord[];
       m[target].push(item);
       return m;
     }, {} as Record<string, KPIRecord[]>);
 
-    const acc: Record<string, { avg: number; count: number }> = {};
+    const acc: Record<string, { avg: number; count: number; threshold: number }> = {};
     Object.entries(grouped).forEach(([target, records]) => {
       const vals: number[] = [];
       records.forEach(r => {
         const p = calculatePercentage(r);
-        const hasResult = r['ผลงาน']?.toString().trim() !== '';
+        const hasResult = getStr(r, F.RESULT) !== '';
         if (p !== null && hasResult) vals.push(p);
       });
       const avg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-      acc[target] = { avg, count: records.length };
+      const th = getNum(records[0], F.THRESHOLD) || 0;
+      acc[target] = { avg, count: records.length, threshold: th };
     });
     return acc;
   }, [data]);
@@ -62,48 +73,20 @@ export const TargetCards = ({ data, groupName, mainKPIName, subKPIName, groupIco
             )}
             <div className="min-w-0">
               <h2 className="text-xl sm:text-2xl font-bold break-words">กลุ่มเป้าหมาย</h2>
-              <nav aria-label="Breadcrumb" className="text-sm mt-1">
-                <div className="flex items-center text-muted-foreground flex-wrap gap-1">
-                  <button
-                    type="button"
-                    onClick={onNavigateToGroups ?? onNavigateToMain ?? onBack}
-                    className="text-primary hover:underline"
-                    title="ไปที่ประเด็นขับเคลื่อนหลัก"
-                  >
-                    {groupName}
-                  </button>
-                  <span className="mx-1">/</span>
-                  <button
-                    type="button"
-                    onClick={onNavigateToMain ?? onBack}
-                    className="text-primary hover:underline"
-                    title="ไปที่ตัวชี้วัดหลัก"
-                  >
-                    ตัวชี้วัดหลัก: {mainKPIName}
-                  </button>
-                  {subKPIName && <span className="mx-1">/</span>}
-                  {subKPIName && (
-                    onNavigateToSub ? (
-                      <button
-                        type="button"
-                        onClick={onNavigateToSub}
-                        className="text-primary hover:underline"
-                        title="ไปที่ตัวชี้วัดย่อย"
-                      >
-                        ตัวชี้วัดย่อย: {subKPIName}
-                      </button>
-                    ) : (
-                      <span className="text-foreground">ตัวชี้วัดย่อย: {subKPIName}</span>
-                    )
-                  )}
-                  <span className="mx-1">/</span>
-                  <span className="text-foreground">กลุ่มเป้าหมาย</span>
-                </div>
-              </nav>
             </div>
           </div>
         </div>
+
       </div>
+
+      {/* Path + Target badges (same placement as detail page) */}
+        <ContextPath
+          groupName={groupName}
+          mainKPIName={mainKPIName}
+          subKPIName={subKPIName}
+          targets={uniqueTargets}
+          showBadges
+        />
 
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -135,10 +118,10 @@ export const TargetCards = ({ data, groupName, mainKPIName, subKPIName, groupIco
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">ร้อยละ</span>
-                  <span className={`text-lg font-bold ${getStatusColor(s.avg)}`}>{s.avg.toFixed(1)}%</span>
+                  <span className="text-sm text-muted-foreground">ร้อยละเฉลี่ย</span>
+                  <span className={`text-lg font-bold ${getStatusColorByThreshold(s.avg, s.threshold)}`}>{formatPercentage(s.avg)}</span>
                 </div>
-                <Progress value={Math.min(s.avg, 100)} className={`h-2 ${getProgressClass(s.avg)}`} />
+                <Progress value={Math.min(s.avg, 100)} className={`h-2 ${getProgressClassByThreshold(s.avg, s.threshold)}`} />
               </div>
 
               <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all" size="sm">

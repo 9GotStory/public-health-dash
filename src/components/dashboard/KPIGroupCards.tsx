@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useMemo } from "react";
 import {
   ChevronRight,
   Brain,
@@ -26,21 +27,24 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { KPIRecord, SummaryStats } from "@/types/kpi";
+import { getStatusColor, getProgressClass, calculatePercentage } from "@/lib/kpi";
 
 interface KPIGroupCardsProps {
   data: KPIRecord[];
-  summary: SummaryStats;
-  onGroupClick: (groupName: string) => void;
+  stats: SummaryStats;
+  onGroupClick: (groupName: string, icon: LucideIcon) => void;
 }
 
-export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProps) => {
+export const KPIGroupCards = ({ data, stats, onGroupClick }: KPIGroupCardsProps) => {
   // Group data by "ประเด็นขับเคลื่อน"
-  const groupedData = data.reduce((acc, item) => {
-    const group = item['ประเด็นขับเคลื่อน'];
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(item);
-    return acc;
-  }, {} as Record<string, KPIRecord[]>);
+  const groupedData = useMemo(() => {
+    return data.reduce((acc, item) => {
+      const group = item['ประเด็นขับเคลื่อน'];
+      if (!acc[group]) acc[group] = [];
+      acc[group].push(item);
+      return acc;
+    }, {} as Record<string, KPIRecord[]>);
+  }, [data]);
 
   const fallbackIcons: LucideIcon[] = [
     Activity,
@@ -60,7 +64,7 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
     Zap,
   ];
 
-  const iconMap = new Map<string, LucideIcon>();
+  const iconMap = useMemo(() => new Map<string, LucideIcon>(), []);
 
   const getGroupIcon = (groupName: string): LucideIcon => {
     if (groupName.includes('สุขภาพจิต')) {
@@ -79,11 +83,7 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
     return iconMap.get(groupName)!;
   };
 
-  const getStatusColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-success';
-    if (percentage >= 60) return 'text-warning';
-    return 'text-destructive';
-  };
+  
 
   return (
     <div className="space-y-6">
@@ -93,22 +93,57 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(groupedData).map(([groupName, records]) => {
-          const groupStats = summary.groupStats[groupName];
-          const averagePercentage = groupStats?.averagePercentage || 0;
-          const passedCount = groupStats?.passed || 0;
-          const totalCount = groupStats?.count ?? 0;
-          const IconComponent = getGroupIcon(groupName);
+          // Compute group-level stats consistent with the Main view
+          // totalCount: number of unique main KPIs in this group
+          // passedCount: number of main KPIs where all sub-KPIs pass their thresholds
+          // averagePercentage: average of per-main averages (each main's avg is the average of its sub-KPIs' first-row percentages)
+          const byMain: Record<string, Record<string, KPIRecord[]>> = records.reduce((m, item) => {
+            const main = item['ตัวชี้วัดหลัก'];
+            const sub = item['ตัวชี้วัดย่อย'];
+            if (!m[main]) m[main] = {} as Record<string, KPIRecord[]>;
+            if (!m[main][sub]) m[main][sub] = [];
+            m[main][sub].push(item);
+            return m;
+          }, {} as Record<string, Record<string, KPIRecord[]>>);
+
+          // Compute per-main averages and pass flags using first-row percentage per sub-KPI
+          const perMainAverages: number[] = [];
+          const mainPassFlags: boolean[] = [];
+          Object.values(byMain).forEach(subMap => {
+            const subAverages: number[] = [];
+            let subAllPass = true;
+            Object.values(subMap).forEach(recs => {
+              const vals: number[] = [];
+              recs.forEach(r => {
+                const p = calculatePercentage(r);
+                const hasResult = r['ผลงาน']?.toString().trim() !== '';
+                if (p !== null && hasResult) vals.push(p);
+              });
+              const avg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+              const th = parseFloat(recs[0]['เกณฑ์ผ่าน (%)']?.toString() || '0');
+              if (avg < th) subAllPass = false;
+              subAverages.push(avg);
+            });
+            const avgMain = subAverages.length > 0 ? subAverages.reduce((a, b) => a + b, 0) / subAverages.length : 0;
+            perMainAverages.push(avgMain);
+            mainPassFlags.push(subAllPass);
+          });
+
+          const totalCount = Object.keys(byMain).length;
+          const averagePercentage = perMainAverages.length > 0 ? perMainAverages.reduce((a, b) => a + b, 0) / perMainAverages.length : 0;
+          const passedCount = mainPassFlags.filter(Boolean).length;
+          const GroupIcon = getGroupIcon(groupName);
 
           return (
             <Card
               key={groupName}
               className="p-6 hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-primary"
-              onClick={() => onGroupClick(groupName)}
+              onClick={() => onGroupClick(groupName, GroupIcon)}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3 min-w-0 flex-1">
                   <div className="p-2 bg-primary/10 rounded-lg text-primary flex-shrink-0">
-                    <IconComponent className="h-6 w-6" />
+                    <GroupIcon className="h-6 w-6" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-base sm:text-lg leading-tight group-hover:text-primary transition-colors break-words">
@@ -123,7 +158,7 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
                 {/* Stats Row */}
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center space-x-2">
-                    <span className="text-muted-foreground">ตัวชี้วัด:</span>
+                    <span className="text-muted-foreground">ตัวชี้วัดหลัก:</span>
                     <span className="font-medium">{totalCount}</span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -142,9 +177,9 @@ export const KPIGroupCards = ({ data, summary, onGroupClick }: KPIGroupCardsProp
                       {averagePercentage.toFixed(1)}%
                     </span>
                   </div>
-                  <Progress 
-                    value={Math.min(averagePercentage, 100)} 
-                    className="h-2"
+                  <Progress
+                    value={Math.min(averagePercentage, 100)}
+                    className={`h-2 ${getProgressClass(averagePercentage)}`}
                   />
                 </div>
 

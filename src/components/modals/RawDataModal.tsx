@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +37,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     setViewMode(record ? 'row' : 'all');
   }, [record, isOpen]);
 
-  const matchRecord = (row: Record<string, unknown>) => {
+  const matchRecord = useCallback((row: Record<string, unknown>) => {
     if (!record) return true;
     const code = record.service_code_ref ? record.service_code_ref.toString().trim() : '';
     const name = record['ชื่อหน่วยบริการ'] ? record['ชื่อหน่วยบริการ'].toString().trim() : '';
@@ -45,23 +45,30 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
       const v = value?.toString().trim();
       return (code && v === code) || (name && v === name);
     });
-  };
+  }, [record]);
 
-  const viewData = viewMode === 'row' ? sourceData.filter(matchRecord) : sourceData;
+  const viewData = useMemo(
+    () => (viewMode === 'row' ? sourceData.filter(matchRecord) : sourceData),
+    [viewMode, sourceData, matchRecord]
+  );
 
   // Filter data based on search term
-  const filteredData = viewData.filter(row => {
-    if (!searchTerm) return true;
-    return Object.values(row).some(value =>
-      (value ?? '')
-        .toString()
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  });
+  const filteredData = useMemo(
+    () =>
+      viewData.filter(row => {
+        if (!searchTerm) return true;
+        return Object.values(row).some(value =>
+          (value ?? '')
+            .toString()
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+        );
+      }),
+    [viewData, searchTerm]
+  );
 
   // Get column headers
-  const headers = viewData.length > 0 ? Object.keys(viewData[0]) : [];
+  const headers = useMemo(() => (viewData.length > 0 ? Object.keys(viewData[0]) : []), [viewData]);
 
   const handleExport = () => {
     if (filteredData.length === 0) return;
@@ -77,10 +84,12 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     const html = `<table><thead><tr>${tableHeader}</tr></thead><tbody>${tableRows}</tbody></table>`;
 
     const blob = new Blob(['\uFEFF' + html], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
+    link.href = url;
     link.download = `${sheetSource}_${new Date().toISOString().split('T')[0]}.xls`;
     link.click();
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -198,9 +207,9 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
                 <table className="min-w-max w-full text-sm">
                   <thead className="bg-muted sticky top-0">
                       <tr>
-                        {headers.map((header, index) => (
+                        {headers.map((header) => (
                           <th
-                            key={index}
+                            key={header}
                             className="text-left p-3 font-medium border-r border-border last:border-r-0 min-w-[120px]"
                           >
                             {header}
@@ -220,7 +229,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
 
                           return (
                             <td
-                              key={colIndex}
+                              key={header}
                               className={`p-3 border-r border-border last:border-r-0 ${
                                 isNumber ? 'text-right font-mono' : 'text-left'
                               }`}

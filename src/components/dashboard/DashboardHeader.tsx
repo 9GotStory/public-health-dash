@@ -3,12 +3,29 @@ import { TrendingUp, Target, CheckCircle, AlertTriangle } from "lucide-react";
 import { SummaryStats } from "@/types/kpi";
 
 interface DashboardHeaderProps {
-  summary: SummaryStats;
+  stats: SummaryStats;
+  // Optional: override average for the summary bar based on current view context
+  contextAverage?: number;
+  // Optional: override counts for the three KPI counters based on current view
+  contextTotal?: number;
+  contextPassed?: number;
+  contextFailed?: number;
+  // Optional: override label for the total counter card
+  contextTotalLabel?: string;
 }
 
-export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
-  const successRate = summary.totalKPIs > 0 ? 
-    Math.round((summary.passedKPIs / summary.totalKPIs) * 100) : 0;
+export const DashboardHeader = ({ stats, contextAverage, contextTotal, contextPassed, contextFailed, contextTotalLabel }: DashboardHeaderProps) => {
+  const effectiveTotal = typeof contextTotal === 'number' ? contextTotal : stats.totalKPIs;
+  const effectivePassed = typeof contextPassed === 'number' ? contextPassed : stats.passedKPIs;
+  const effectiveFailed = typeof contextFailed === 'number'
+    ? contextFailed
+    : (typeof contextTotal === 'number' && typeof contextPassed === 'number')
+      ? Math.max(0, contextTotal - contextPassed)
+      : stats.failedKPIs;
+  const successRate = effectiveTotal > 0 ?
+    Math.round((effectivePassed / effectiveTotal) * 100) : 0;
+  const effectiveAverage =
+    typeof contextAverage === 'number' ? contextAverage : stats.averagePercentage;
 
   return (
     <div className="space-y-6">
@@ -30,8 +47,8 @@ export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
               <Target className="h-6 w-6 text-primary-foreground" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">ตัวชี้วัดทั้งหมด</p>
-              <p className="text-2xl font-bold text-primary">{summary.totalKPIs}</p>
+              <p className="text-sm font-medium text-muted-foreground">{contextTotalLabel ?? 'ตัวชี้วัดทั้งหมด'}</p>
+              <p className="text-2xl font-bold text-primary">{effectiveTotal}</p>
             </div>
           </div>
         </Card>
@@ -43,7 +60,7 @@ export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">ผ่านเกณฑ์</p>
-              <p className="text-2xl font-bold text-success">{summary.passedKPIs}</p>
+              <p className="text-2xl font-bold text-success">{effectivePassed}</p>
             </div>
           </div>
         </Card>
@@ -55,7 +72,7 @@ export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">ไม่ผ่านเกณฑ์</p>
-              <p className="text-2xl font-bold text-destructive">{summary.failedKPIs}</p>
+              <p className="text-2xl font-bold text-destructive">{effectiveFailed}</p>
             </div>
           </div>
         </Card>
@@ -78,13 +95,13 @@ export const DashboardHeader = ({ summary }: DashboardHeaderProps) => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">ภาพรวมผลการดำเนินงาน</h3>
           <div className="text-sm text-muted-foreground">
-            ค่าเฉลี่ย: {summary.averagePercentage.toFixed(2)}%
+            ค่าเฉลี่ย: {effectiveAverage.toFixed(2)}%
           </div>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
           <div 
             className="bg-gradient-to-r from-success to-success h-3 rounded-full transition-all duration-300"
-            style={{ width: `${Math.min(summary.averagePercentage, 100)}%` }}
+            style={{ width: `${Math.min(effectiveAverage, 100)}%` }}
           ></div>
         </div>
         <div className="flex justify-between text-xs text-muted-foreground mt-2">

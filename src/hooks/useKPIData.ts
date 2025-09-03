@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { KPIData, KPIRecord, KPIInfo, APIResponse } from '@/types/kpi';
 
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec';
+// Prefer env var, fall back to default for local dev
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec';
+
+const isAbortError = (e: unknown): e is DOMException => e instanceof DOMException && e.name === 'AbortError';
 
 export const useKPIData = () => {
   const [allData, setAllData] = useState<KPIData | null>(null);
@@ -12,8 +15,8 @@ export const useKPIData = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch(`${API_BASE_URL}?action=getAllKPIData`);
+      const controller = new AbortController();
+      const response = await fetch(`${API_BASE_URL}?action=getAllKPIData`, { signal: controller.signal });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -27,7 +30,7 @@ export const useKPIData = () => {
       setAllData(result.data);
     } catch (err) {
       console.error('Error fetching KPI data:', err);
-      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการดึงข้อมูล');
+      if (!isAbortError(err)) setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการดึงข้อมูล');
     } finally {
       setLoading(false);
     }
@@ -56,7 +59,7 @@ export const useKPIInfo = (groupName?: string, kpiInfoId?: string) => {
     try {
       setLoading(true);
       setError(null);
-      
+      const controller = new AbortController();
       let url = `${API_BASE_URL}?action=getKPIInfoByGroup`;
       if (id) {
         url += `&kpi_info_id=${encodeURIComponent(id)}`;
@@ -64,7 +67,7 @@ export const useKPIInfo = (groupName?: string, kpiInfoId?: string) => {
         url += `&param=${encodeURIComponent(group)}`;
       }
       
-      const response = await fetch(url);
+      const response = await fetch(url, { signal: controller.signal });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -78,7 +81,7 @@ export const useKPIInfo = (groupName?: string, kpiInfoId?: string) => {
       setKpiInfo(result.data);
     } catch (err) {
       console.error('Error fetching KPI info:', err);
-      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการดึงข้อมูล KPI Info');
+      if (!isAbortError(err)) setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการดึงข้อมูล KPI Info');
     } finally {
       setLoading(false);
     }
@@ -109,7 +112,8 @@ export const useSourceData = () => {
       setError(null);
       setSourceData([]);
 
-      const response = await fetch(`${API_BASE_URL}?action=getSourceSheetData&param=${encodeURIComponent(sheetName)}`);
+      const controller = new AbortController();
+      const response = await fetch(`${API_BASE_URL}?action=getSourceSheetData&param=${encodeURIComponent(sheetName)}`, { signal: controller.signal });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -125,7 +129,7 @@ export const useSourceData = () => {
       setSourceData(result.data);
     } catch (err) {
       console.error('Error fetching source data:', err);
-      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการดึงข้อมูลต้นฉบับ');
+      if (!isAbortError(err)) setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการดึงข้อมูลต้นฉบับ');
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { useKPIData, useKPIInfo } from "@/hooks/useKPIData";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FilterPanel } from "@/components/dashboard/FilterPanel";
@@ -14,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { calculatePercentage } from "@/lib/kpi";
 
 const calculateSummary = (data: KPIRecord[]): SummaryStats => {
-  const stats: SummaryStats = {
+  const summary: SummaryStats = {
     totalKPIs: 0,
     averagePercentage: 0,
     passedKPIs: 0,
@@ -50,12 +49,12 @@ const calculateSummary = (data: KPIRecord[]): SummaryStats => {
     const average = percentages.reduce((sum, p) => sum + p, 0) / percentages.length;
     const passed = average >= threshold;
 
-    stats.totalKPIs++;
-    stats.averagePercentage += average;
-    if (passed) stats.passedKPIs++; else stats.failedKPIs++;
+    summary.totalKPIs++;
+    summary.averagePercentage += average;
+    if (passed) summary.passedKPIs++; else summary.failedKPIs++;
 
-    if (!stats.groupStats[group]) {
-      stats.groupStats[group] = {
+    if (!summary.groupStats[group]) {
+      summary.groupStats[group] = {
         count: 0,
         totalPercentage: 0,
         passed: 0,
@@ -63,21 +62,21 @@ const calculateSummary = (data: KPIRecord[]): SummaryStats => {
         averagePercentage: 0,
       };
     }
-    const g = stats.groupStats[group];
+    const g = summary.groupStats[group];
     g.count++;
     g.totalPercentage += average;
     if (passed) g.passed++; else g.failed++;
   });
 
-  Object.values(stats.groupStats).forEach(g => {
+  Object.values(summary.groupStats).forEach(g => {
     g.averagePercentage = g.count > 0 ? g.totalPercentage / g.count : 0;
   });
 
-  stats.averagePercentage = stats.totalKPIs > 0
-    ? stats.averagePercentage / stats.totalKPIs
+  summary.averagePercentage = summary.totalKPIs > 0
+    ? summary.averagePercentage / summary.totalKPIs
     : 0;
 
-  return stats;
+  return summary;
 };
 
 const Index = () => {
@@ -87,7 +86,6 @@ const Index = () => {
   // Navigation state
   const [currentView, setCurrentView] = useState<'groups' | 'detail'>('groups');
   const [selectedGroup, setSelectedGroup] = useState<string>('');
-  const [selectedGroupIcon, setSelectedGroupIcon] = useState<LucideIcon | null>(null);
   
   // Modal states
   const [showKPIInfo, setShowKPIInfo] = useState(false);
@@ -163,9 +161,8 @@ const Index = () => {
     });
   };
 
-  const handleGroupClick = (groupName: string, icon: LucideIcon) => {
+  const handleGroupClick = (groupName: string) => {
     setSelectedGroup(groupName);
-    setSelectedGroupIcon(icon);
     setFilters(prev => ({ ...prev, selectedGroup: groupName }));
     setCurrentView('detail');
   };
@@ -173,7 +170,6 @@ const Index = () => {
   const handleBackToGroups = () => {
     setCurrentView('groups');
     setSelectedGroup('');
-    setSelectedGroupIcon(null);
     setFilters(initialFilters);
   };
 
@@ -229,23 +225,15 @@ const Index = () => {
 
   const basicFilteredData = applyBasicFilters(allData.configuration);
   const filteredData = applyStatusFilter(basicFilteredData);
-  const stats = calculateSummary(filteredData);
-  // Legacy aliases for components expecting global summary objects
-  if (typeof window !== "undefined") {
-    const legacy = window as unknown as Record<string, unknown>;
-    legacy.summary = stats;
-    legacy.filteredSummary = stats;
-    // Provide a stub for legacy code expecting a global groupIcon reference
-    if (legacy.groupIcon === undefined) {
-      legacy.groupIcon = () => null;
-    }
-  }
+  const filteredSummary = calculateSummary(filteredData);
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Dashboard Header */}
-        <DashboardHeader stats={stats} />
+        <DashboardHeader
+          summary={filteredSummary}
+        />
 
         {/* Filter Panel */}
         <FilterPanel 
@@ -258,15 +246,13 @@ const Index = () => {
         {currentView === 'groups' ? (
           <KPIGroupCards
             data={filteredData}
-            stats={stats}
+            summary={filteredSummary}
             onGroupClick={handleGroupClick}
           />
         ) : (
-          <KPIDetailTable
+          <KPIDetailTable 
             data={filteredData}
             groupName={selectedGroup}
-            groupIcon={selectedGroupIcon ?? undefined}
-            summary={filteredSummary}
             onBack={handleBackToGroups}
             onKPIInfoClick={handleKPIInfoClick}
             onRawDataClick={handleRawDataClick}

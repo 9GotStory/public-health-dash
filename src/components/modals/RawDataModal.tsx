@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -47,28 +47,21 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     });
   };
 
-  const viewData = useMemo(
-    () => (viewMode === 'row' ? sourceData.filter(matchRecord) : sourceData),
-    [viewMode, sourceData, record]
-  );
+  const viewData = viewMode === 'row' ? sourceData.filter(matchRecord) : sourceData;
 
   // Filter data based on search term
-  const filteredData = useMemo(
-    () =>
-      viewData.filter(row => {
-        if (!searchTerm) return true;
-        return Object.values(row).some(value =>
-          (value ?? '')
-            .toString()
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())
-        );
-      }),
-    [viewData, searchTerm]
-  );
+  const filteredData = viewData.filter(row => {
+    if (!searchTerm) return true;
+    return Object.values(row).some(value =>
+      (value ?? '')
+        .toString()
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+    );
+  });
 
   // Get column headers
-  const headers = useMemo(() => (viewData.length > 0 ? Object.keys(viewData[0]) : []), [viewData]);
+  const headers = viewData.length > 0 ? Object.keys(viewData[0]) : [];
 
   const handleExport = () => {
     if (filteredData.length === 0) return;
@@ -84,12 +77,10 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
     const html = `<table><thead><tr>${tableHeader}</tr></thead><tbody>${tableRows}</tbody></table>`;
 
     const blob = new Blob(['\uFEFF' + html], { type: 'application/vnd.ms-excel' });
-    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = url;
+    link.href = URL.createObjectURL(blob);
     link.download = `${sheetSource}_${new Date().toISOString().split('T')[0]}.xls`;
     link.click();
-    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -207,9 +198,9 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
                 <table className="min-w-max w-full text-sm">
                   <thead className="bg-muted sticky top-0">
                       <tr>
-                        {headers.map((header) => (
+                        {headers.map((header, index) => (
                           <th
-                            key={header}
+                            key={index}
                             className="text-left p-3 font-medium border-r border-border last:border-r-0 min-w-[120px]"
                           >
                             {header}
@@ -229,7 +220,7 @@ export const RawDataModal = ({ isOpen, onClose, sheetSource, record }: RawDataMo
 
                           return (
                             <td
-                              key={header}
+                              key={colIndex}
                               className={`p-3 border-r border-border last:border-r-0 ${
                                 isNumber ? 'text-right font-mono' : 'text-left'
                               }`}

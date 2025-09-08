@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { KPIData, KPIRecord, KPIInfo, APIResponse } from '@/types/kpi';
 import { ApiResponseSchema, KPIDataSchema, KPIInfoSchema } from '@/lib/schema';
+import { fetchWithRetry } from '@/lib/utils';
 
 // Prefer env var, fall back to default for local dev
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec';
@@ -12,22 +13,7 @@ export const useKPIData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
-  const fetchWithRetry = async (url: string, init?: RequestInit, retries = 2, delay = 500): Promise<Response> => {
-    let lastErr: unknown = null;
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        const controller = new AbortController();
-        const resp = await fetch(url, { ...(init || {}), signal: controller.signal });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        return resp;
-      } catch (err) {
-        lastErr = err;
-        if (attempt < retries) await sleep(delay * Math.pow(2, attempt));
-      }
-    }
-    throw lastErr instanceof Error ? lastErr : new Error('Network error');
-  };
+  
 
   const fetchData = async () => {
     try {

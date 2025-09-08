@@ -37,7 +37,7 @@ export const KPIInfoModal = ({ isOpen, onClose, kpiInfo, loading }: KPIInfoModal
   if (loading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)]">
           <DialogHeader className="sr-only">
             <DialogTitle>กำลังโหลดข้อมูล</DialogTitle>
             <DialogDescription>กำลังโหลดรายละเอียดตัวชี้วัด</DialogDescription>
@@ -54,7 +54,7 @@ export const KPIInfoModal = ({ isOpen, onClose, kpiInfo, loading }: KPIInfoModal
   if (!kpiInfo) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)]">
           <DialogHeader className="sr-only">
             <DialogTitle>ไม่พบข้อมูลรายละเอียด KPI</DialogTitle>
             <DialogDescription>
@@ -113,7 +113,7 @@ export const KPIInfoModal = ({ isOpen, onClose, kpiInfo, loading }: KPIInfoModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] p-0">
+      <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)] p-0 flex flex-col">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl font-bold">
             รายละเอียดตัวชี้วัด: {kpiInfo['ตัวชี้วัดหลัก']}
@@ -123,7 +123,7 @@ export const KPIInfoModal = ({ isOpen, onClose, kpiInfo, loading }: KPIInfoModal
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="h-[calc(90vh-8rem)] px-6">
+        <ScrollArea className="flex-1 min-h-0 px-6">
           <div className="space-y-6 pb-6">
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo, useState, useCallback } from "react";
+import React, { Suspense, useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { Loader2, Brain, Pill, Ribbon, Activity } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useKPIData, useKPIInfo } from "@/hooks/useKPIData";
@@ -19,6 +19,8 @@ const GroupOverviewBarChartLazy = React.lazy(() => import('@/components/dashboar
 import { calculateSummary, calculateGroupOverviewByMain } from "@/lib/summary";
 import { deriveBackLevelFromTarget, deriveBackLevelFromDetail } from "@/lib/navigation";
 import { CompareGroupsControl } from "@/components/dashboard/CompareGroupsControl";
+import { decodeFiltersFromShortToken, encodeFiltersToShortToken, decodeFiltersFromIndexToken, encodeFiltersToIndexToken } from "@/lib/link";
+import { toast } from "@/components/ui/use-toast";
 
 // calculateSummary moved to src/lib/summary.ts
 
@@ -54,6 +56,196 @@ const Index = () => {
     statusFilters: []
   };
   const [filters, setFilters] = useState<FilterState>(initialFilters);
+  const isPopNavigatingRef = useRef(false);
+  const preferShortUrlRef = useRef(true); // always use short link
+  const initialHydratingRef = useRef(true);
+  const pendingIndexTokenRef = useRef<string | null>(null);
+  const debounceTimerRef = useRef<number | null>(null);
+  const lastPushedUrlRef = useRef<string | null>(null);
+  const lastComputedUrlRef = useRef<string | null>(null);
+
+  const buildXUrlPreservingExtras = (f: FilterState) => {
+    if (!allData?.configuration?.length) return window.location.pathname + window.location.search + window.location.hash;
+    const token = encodeFiltersToIndexToken(allData.configuration, f, currentView);
+    const url = new URL(window.location.href);
+    const original = new URLSearchParams(url.search);
+    const params = new URLSearchParams();
+    const reserved = new Set(['x','s','group','main','sub','target','service','status']);
+    if (token) params.set('x', token);
+    original.forEach((v, k) => { if (!reserved.has(k)) params.append(k, v); });
+    const qs = params.toString();
+    return qs ? `${url.pathname}?${qs}${url.hash}` : `${url.pathname}${url.hash}`;
+  };
+
+  // On first load, hydrate filters in this priority: x= (index token) -> s= (string token) -> normal params.
+  // We keep the URL English-only by preferring short tokens (x=) for push/replace.
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      let next: FilterState | null = null;
+      const x = sp.get('x');
+      if (x) {
+        // decode requires dataset; if not loaded yet, defer
+        pendingIndexTokenRef.current = x;
+      }
+      const s = sp.get('s');
+      if (!next && s) {
+        const decoded = decodeFiltersFromShortToken(s);
+        if (decoded) next = decoded;
+      }
+      if (!next) {
+        const g = sp.get('group') || '';
+        const fromLong: FilterState = {
+          selectedGroup: g,
+          selectedMainKPI: sp.get('main') || '',
+          selectedSubKPI: sp.get('sub') || '',
+          selectedTarget: sp.get('target') || '',
+          selectedService: sp.get('service') || '',
+          statusFilters: (sp.get('status') || '')
+            .split(',')
+            .map(sv => sv.trim())
+            .filter(Boolean) as FilterState['statusFilters'],
+        };
+        const hasAny = (
+          fromLong.selectedGroup ||
+          fromLong.selectedMainKPI ||
+          fromLong.selectedSubKPI ||
+          fromLong.selectedTarget ||
+          fromLong.selectedService ||
+          (fromLong.statusFilters?.length || 0) > 0
+        );
+        if (hasAny) next = fromLong;
+      }
+
+      if (next) {
+        isPopNavigatingRef.current = true;
+        initialHydratingRef.current = true;
+        handleFiltersChange(next);
+        // If data is available, normalize URL to short x= form immediately; otherwise allow sync effect to handle later
+        if (allData?.configuration?.length) {
+          const newUrl = buildXUrlPreservingExtras(next);
+          window.history.replaceState({}, '', newUrl);
+        }
+        setTimeout(() => { isPopNavigatingRef.current = false; initialHydratingRef.current = false; }, 0);
+      }
+    } catch {
+      // ignore invalid URL
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keep URL query params in sync with current filters (English-only short token x=)
+  useEffect(() => {
+    if (isPopNavigatingRef.current) return;
+    if (!allData?.configuration?.length) return;
+    const { pathname, search, hash } = window.location;
+    const newUrl = buildXUrlPreservingExtras(filters);
+    const current = `${pathname}${search}${hash}`;
+    if (newUrl === current || initialHydratingRef.current) return;
+    // immediate replace to reflect latest
+    window.history.replaceState({}, '', newUrl);
+    lastComputedUrlRef.current = newUrl;
+    // debounce a push to create a history entry
+    if (debounceTimerRef.current) {
+      window.clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = window.setTimeout(() => {
+      if (lastPushedUrlRef.current !== lastComputedUrlRef.current && lastComputedUrlRef.current) {
+        window.history.pushState({}, '', lastComputedUrlRef.current);
+        lastPushedUrlRef.current = lastComputedUrlRef.current;
+      }
+      debounceTimerRef.current = null;
+    }, 450);
+  }, [filters, allData]);
+
+  // Sync when navigating with browser back/forward
+  useEffect(() => {
+    const onPopState = () => {
+      try {
+        isPopNavigatingRef.current = true;
+        const sp = new URLSearchParams(window.location.search);
+        const x = sp.get('x');
+        if (x) {
+          if (allData?.configuration?.length) {
+            const decoded = decodeFiltersFromIndexToken(allData.configuration, x);
+            if (decoded) {
+              handleFiltersChange(decoded.filters);
+              if (decoded.view) setCurrentView(decoded.view);
+              return;
+            } else {
+              toast({ description: 'ไม่สามารถอ่านลิงก์สั้นได้หรือลิงก์ไม่ตรงกับข้อมูลล่าสุด' });
+            }
+          } else {
+            pendingIndexTokenRef.current = x;
+            return;
+          }
+        }
+        const s = sp.get('s');
+        if (s) {
+          const decoded = decodeFiltersFromShortToken(s);
+          if (decoded) {
+            handleFiltersChange(decoded);
+            // Normalize URL to short x= form if data is available
+            if (allData?.configuration?.length) {
+              const newUrl = buildXUrlPreservingExtras(decoded);
+              window.history.replaceState({}, '', newUrl);
+            }
+            return;
+          }
+        }
+        const next: FilterState = {
+          selectedGroup: sp.get('group') || '',
+          selectedMainKPI: sp.get('main') || '',
+          selectedSubKPI: sp.get('sub') || '',
+          selectedTarget: sp.get('target') || '',
+          selectedService: sp.get('service') || '',
+          statusFilters: (sp.get('status') || '')
+            .split(',')
+            .map(sv => sv.trim())
+            .filter(Boolean) as FilterState['statusFilters'],
+        };
+        handleFiltersChange(next);
+        // Normalize to short x= if possible
+        if (allData?.configuration?.length) {
+          const newUrl = buildXUrlPreservingExtras(next);
+          window.history.replaceState({}, '', newUrl);
+        }
+        return;
+      } finally {
+        setTimeout(() => { isPopNavigatingRef.current = false; }, 0);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // If an index-token exists and data just loaded, decode; also if current URL isn't x=, normalize to x=
+  useEffect(() => {
+    if (!allData?.configuration?.length) return;
+    // Decode pending x token if present
+    if (pendingIndexTokenRef.current) {
+      const token = pendingIndexTokenRef.current;
+      pendingIndexTokenRef.current = null;
+      const decoded = decodeFiltersFromIndexToken(allData.configuration, token);
+      if (decoded) {
+        isPopNavigatingRef.current = true;
+        initialHydratingRef.current = true;
+        handleFiltersChange(decoded.filters);
+        if (decoded.view) setCurrentView(decoded.view);
+        const newUrl = buildXUrlPreservingExtras(decoded.filters);
+        window.history.replaceState({}, '', newUrl);
+        setTimeout(() => { isPopNavigatingRef.current = false; initialHydratingRef.current = false; }, 0);
+      }
+    } else {
+      // Normalize current URL to x if it isn't already
+      const sp = new URLSearchParams(window.location.search);
+      if (!sp.get('x')) {
+        const newUrl = buildXUrlPreservingExtras(filters);
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [allData]);
 
   // Precompute group overview across ALL data (not filtered) using equal-weight by main KPI
   const allStatsForChart = useMemo(() => {
@@ -786,6 +978,7 @@ const Index = () => {
           data={allData.configuration}
           filters={filters}
           onFiltersChange={handleFiltersChange}
+          currentView={currentView}
         />
 
         {/* Main Content */}

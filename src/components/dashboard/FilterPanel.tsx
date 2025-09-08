@@ -9,16 +9,19 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RotateCcw, Filter, X, ChevronDown, ChevronUp } from "lucide-react";
+import { RotateCcw, Filter, X, ChevronDown, ChevronUp, Share2 } from "lucide-react";
 import { KPIRecord, FilterState } from "@/types/kpi";
+import { toast } from "@/components/ui/use-toast";
+import { encodeFiltersToIndexToken } from "@/lib/link";
 
 interface FilterPanelProps {
   data: KPIRecord[];
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
+  currentView?: 'groups' | 'main' | 'sub' | 'target' | 'detail';
 }
 
-export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps) => {
+export const FilterPanel = ({ data, filters, onFiltersChange, currentView }: FilterPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Utility class reused by all SelectItem entries
@@ -126,6 +129,51 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
     });
   };
 
+  const buildShortShareUrl = () => {
+    const base = `${window.location.origin}${window.location.pathname}`;
+    const token = encodeFiltersToIndexToken(data, filters, currentView);
+    return `${base}?x=${token}${window.location.hash}`;
+  };
+
+  const shareUrl = async (url: string) => {
+    const nav: any = navigator as any;
+    if (nav && typeof nav.share === 'function') {
+      try {
+        await nav.share({ title: 'Public Health Dashboard', url });
+        return true;
+      } catch {
+        // fall through to clipboard
+      }
+    }
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(url);
+        toast({ description: 'คัดลอกลิงก์แล้ว' });
+        return true;
+      }
+    } catch {}
+    // Fallback
+    try {
+      const input = document.createElement('input');
+      input.value = url;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      toast({ description: 'คัดลอกลิงก์แล้ว' });
+      return true;
+    } catch (e) {
+      console.error(e);
+      toast({ description: 'แชร์ลิงก์ไม่สำเร็จ' });
+      return false;
+    }
+  };
+
+  const handleShareLink = async () => {
+    const url = buildShortShareUrl();
+    await shareUrl(url);
+  };
+
   const hasActiveFilters = Object.values(filters).some(value =>
     Array.isArray(value) ? value.length > 0 : value !== ""
   );
@@ -138,6 +186,16 @@ export const FilterPanel = ({ data, filters, onFiltersChange }: FilterPanelProps
           <h3 className="text-lg font-semibold">ตัวกรองข้อมูล</h3>
         </div>
         <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShareLink}
+            aria-label="แชร์"
+            title="แชร์"
+          >
+            <Share2 className="h-4 w-4 mr-0 lg:mr-1" />
+            <span className="hidden lg:inline">แชร์</span>
+          </Button>
           {hasActiveFilters && (
             <Button variant="outline" size="sm" onClick={resetFilters}>
               <RotateCcw className="h-4 w-4 mr-1" />

@@ -129,8 +129,10 @@ export const FilterPanel = ({ data, filters, onFiltersChange, currentView }: Fil
     });
   };
 
-  const buildShortShareUrl = () => {
+  const buildShareUrl = () => {
     const base = `${window.location.origin}${window.location.pathname}`;
+    const isDefault = !filters.selectedGroup && !filters.selectedMainKPI && !filters.selectedSubKPI && !filters.selectedTarget && !filters.selectedService && (filters.statusFilters?.length || 0) === 0 && (currentView === 'groups' || !currentView);
+    if (isDefault) return `${base}${window.location.hash}`;
     const token = encodeFiltersToIndexToken(data, filters, currentView);
     return `${base}?x=${token}${window.location.hash}`;
   };
@@ -170,7 +172,7 @@ export const FilterPanel = ({ data, filters, onFiltersChange, currentView }: Fil
   };
 
   const handleShareLink = async () => {
-    const url = buildShortShareUrl();
+    const url = buildShareUrl();
     await shareUrl(url);
   };
 

@@ -19,8 +19,9 @@ const GroupOverviewBarChartLazy = React.lazy(() => import('@/components/dashboar
 import { calculateSummary, calculateGroupOverviewByMain } from "@/lib/summary";
 import { deriveBackLevelFromTarget, deriveBackLevelFromDetail } from "@/lib/navigation";
 import { CompareGroupsControl } from "@/components/dashboard/CompareGroupsControl";
-import { decodeFiltersFromShortToken, encodeFiltersToShortToken, decodeFiltersFromIndexToken, encodeFiltersToIndexToken } from "@/lib/link";
+import { decodeFiltersFromShortToken, decodeFiltersFromIndexToken, encodeFiltersToIndexToken } from "@/lib/link";
 import { toast } from "@/components/ui/use-toast";
+// no router state needed for URL syncing
 
 // calculateSummary moved to src/lib/summary.ts
 
@@ -57,46 +58,66 @@ const Index = () => {
   };
   const [filters, setFilters] = useState<FilterState>(initialFilters);
   const isPopNavigatingRef = useRef(false);
-  const preferShortUrlRef = useRef(true); // always use short link
   const initialHydratingRef = useRef(true);
   const pendingIndexTokenRef = useRef<string | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
   const lastPushedUrlRef = useRef<string | null>(null);
   const lastComputedUrlRef = useRef<string | null>(null);
 
-  const buildXUrlPreservingExtras = (f: FilterState) => {
-    if (!allData?.configuration?.length) return window.location.pathname + window.location.search + window.location.hash;
-    const token = encodeFiltersToIndexToken(allData.configuration, f, currentView);
+  // Helper: default state means index page (no params)
+  const isDefaultState = (f: FilterState, v: typeof currentView) =>
+    !f.selectedGroup && !f.selectedMainKPI && !f.selectedSubKPI && !f.selectedTarget && !f.selectedService && (f.statusFilters?.length || 0) === 0 && v === 'groups';
+
+  const buildXUrlPreservingExtras = (f: FilterState, v: typeof currentView = currentView) => {
     const url = new URL(window.location.href);
     const original = new URLSearchParams(url.search);
     const params = new URLSearchParams();
     const reserved = new Set(['x','s','group','main','sub','target','service','status']);
-    if (token) params.set('x', token);
-    original.forEach((v, k) => { if (!reserved.has(k)) params.append(k, v); });
+    if (!isDefaultState(f, v) && allData?.configuration?.length) {
+      const token = encodeFiltersToIndexToken(allData.configuration, f, v);
+      if (token) params.set('x', token);
+    }
+    original.forEach((value, key) => { if (!reserved.has(key)) params.append(key, value); });
     const qs = params.toString();
     return qs ? `${url.pathname}?${qs}${url.hash}` : `${url.pathname}${url.hash}`;
   };
 
-  // On first load, hydrate filters in this priority: x= (index token) -> s= (string token) -> normal params.
-  // We keep the URL English-only by preferring short tokens (x=) for push/replace.
+  // On first load, hydrate filters in this priority: x= (index token) -> s= (string token) -> long params.
   useEffect(() => {
     try {
       const sp = new URLSearchParams(window.location.search);
-      let next: FilterState | null = null;
+      let applied: FilterState | null = null;
+      let appliedView: typeof currentView | undefined = undefined;
+
+      // 1) x param (index token)
       const x = sp.get('x');
       if (x) {
-        // decode requires dataset; if not loaded yet, defer
-        pendingIndexTokenRef.current = x;
+        if (allData?.configuration?.length) {
+          const decoded = decodeFiltersFromIndexToken(allData.configuration, x);
+          if (decoded) {
+            applied = decoded.filters;
+            appliedView = decoded.view;
+          } else {
+            toast({ description: 'ไม่สามารถอ่านลิงก์สั้นได้หรือลิงก์ไม่ตรงกับข้อมูลล่าสุด' });
+          }
+        } else {
+          pendingIndexTokenRef.current = x;
+        }
       }
-      const s = sp.get('s');
-      if (!next && s) {
-        const decoded = decodeFiltersFromShortToken(s);
-        if (decoded) next = decoded;
+
+      // 2) Short s param (decodable without dataset)
+      if (!applied) {
+        const s = sp.get('s');
+        if (s) {
+          const decoded = decodeFiltersFromShortToken(s);
+          if (decoded) applied = decoded;
+        }
       }
-      if (!next) {
-        const g = sp.get('group') || '';
+
+      // 3) Long params as last resort
+      if (!applied) {
         const fromLong: FilterState = {
-          selectedGroup: g,
+          selectedGroup: sp.get('group') || '',
           selectedMainKPI: sp.get('main') || '',
           selectedSubKPI: sp.get('sub') || '',
           selectedTarget: sp.get('target') || '',
@@ -114,19 +135,23 @@ const Index = () => {
           fromLong.selectedService ||
           (fromLong.statusFilters?.length || 0) > 0
         );
-        if (hasAny) next = fromLong;
+        if (hasAny) applied = fromLong;
       }
 
-      if (next) {
+      if (applied) {
         isPopNavigatingRef.current = true;
         initialHydratingRef.current = true;
-        handleFiltersChange(next);
-        // If data is available, normalize URL to short x= form immediately; otherwise allow sync effect to handle later
+        handleFiltersChange(applied);
+        if (appliedView) setCurrentView(appliedView);
         if (allData?.configuration?.length) {
-          const newUrl = buildXUrlPreservingExtras(next);
+          const newUrl = buildXUrlPreservingExtras(applied, appliedView || currentView);
           window.history.replaceState({}, '', newUrl);
         }
         setTimeout(() => { isPopNavigatingRef.current = false; initialHydratingRef.current = false; }, 0);
+      }
+      else {
+        // End initial hydration if nothing to apply
+        setTimeout(() => { initialHydratingRef.current = false; }, 0);
       }
     } catch {
       // ignore invalid URL
@@ -134,10 +159,9 @@ const Index = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Keep URL query params in sync with current filters (English-only short token x=)
+  // Keep URL query params in sync with current filters (but keep homepage clean when default)
   useEffect(() => {
     if (isPopNavigatingRef.current) return;
-    if (!allData?.configuration?.length) return;
     const { pathname, search, hash } = window.location;
     const newUrl = buildXUrlPreservingExtras(filters);
     const current = `${pathname}${search}${hash}`;
@@ -156,9 +180,9 @@ const Index = () => {
       }
       debounceTimerRef.current = null;
     }, 450);
-  }, [filters, allData]);
+  }, [filters, allData, currentView]);
 
-  // Sync when navigating with browser back/forward
+  // Sync when navigating with browser back/forward via query params
   useEffect(() => {
     const onPopState = () => {
       try {
@@ -185,7 +209,7 @@ const Index = () => {
           const decoded = decodeFiltersFromShortToken(s);
           if (decoded) {
             handleFiltersChange(decoded);
-            // Normalize URL to short x= form if data is available
+            // Normalize URL to short x= form if data is available and state not default
             if (allData?.configuration?.length) {
               const newUrl = buildXUrlPreservingExtras(decoded);
               window.history.replaceState({}, '', newUrl);
@@ -220,10 +244,9 @@ const Index = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // If an index-token exists and data just loaded, decode; also if current URL isn't x=, normalize to x=
+  // If a pending index token exists and data just loaded, decode and apply; normalize URL accordingly.
   useEffect(() => {
     if (!allData?.configuration?.length) return;
-    // Decode pending x token if present
     if (pendingIndexTokenRef.current) {
       const token = pendingIndexTokenRef.current;
       pendingIndexTokenRef.current = null;
@@ -233,16 +256,19 @@ const Index = () => {
         initialHydratingRef.current = true;
         handleFiltersChange(decoded.filters);
         if (decoded.view) setCurrentView(decoded.view);
-        const newUrl = buildXUrlPreservingExtras(decoded.filters);
+        const newUrl = buildXUrlPreservingExtras(decoded.filters, decoded.view || currentView);
         window.history.replaceState({}, '', newUrl);
         setTimeout(() => { isPopNavigatingRef.current = false; initialHydratingRef.current = false; }, 0);
+      } else {
+        toast({ description: 'ไม่สามารถอ่านลิงก์สั้นได้หรือลิงก์ไม่ตรงกับข้อมูลล่าสุด' });
       }
     } else {
-      // Normalize current URL to x if it isn't already
+      // When data loads, ensure URL reflects current state appropriately
       const sp = new URLSearchParams(window.location.search);
-      if (!sp.get('x')) {
-        const newUrl = buildXUrlPreservingExtras(filters);
-        window.history.replaceState({}, '', newUrl);
+      const candidateUrl = buildXUrlPreservingExtras(filters);
+      const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (candidateUrl !== current) {
+        window.history.replaceState({}, '', candidateUrl);
       }
     }
   }, [allData]);

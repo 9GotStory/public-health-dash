@@ -8,6 +8,7 @@ const ShortLinkRedirect = () => {
   useEffect(() => {
     const token = params.token || '';
     const hash = window.location.hash || '';
+    // Redirect to root with x= token in query for deep-linking
     navigate({ pathname: '/', search: token ? `?x=${encodeURIComponent(token)}` : '', hash }, { replace: true });
   }, [navigate, params.token]);
 
@@ -15,4 +16,3 @@ const ShortLinkRedirect = () => {
 };
 
 export default ShortLinkRedirect;
-

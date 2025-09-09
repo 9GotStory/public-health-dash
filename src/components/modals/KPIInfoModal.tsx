@@ -24,7 +24,10 @@ import {
   Info,
   AlertCircle
 } from "lucide-react";
+import { FileDown } from "lucide-react";
 import { KPIInfo } from "@/types/kpi";
+import { useKPIReportIndex } from "@/hooks/useKPIReportIndex";
+import KPIDownloadLink from "@/components/reports/KPIDownloadLink";
 
 interface KPIInfoModalProps {
   isOpen: boolean;
@@ -34,6 +37,7 @@ interface KPIInfoModalProps {
 }
 
 export const KPIInfoModal = ({ isOpen, onClose, kpiInfo, loading }: KPIInfoModalProps) => {
+  const { items: reportIndex, loading: reportLoading } = useKPIReportIndex();
   if (loading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -113,7 +117,7 @@ export const KPIInfoModal = ({ isOpen, onClose, kpiInfo, loading }: KPIInfoModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)] p-0 flex flex-col">
+      <DialogContent id="kpi-printable" className="max-w-none w-[calc(100vw-4rem)] h-[calc(100vh-4rem)] p-0 flex flex-col">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl font-bold">
             รายละเอียดตัวชี้วัด: {kpiInfo['ตัวชี้วัดหลัก']}
@@ -294,11 +298,21 @@ export const KPIInfoModal = ({ isOpen, onClose, kpiInfo, loading }: KPIInfoModal
             <Separator />
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button variant="outline" onClick={() => window.print()}>
-                <FileText className="h-4 w-4 mr-2" />
-                พิมพ์
-              </Button>
+            <div className="flex justify-end space-x-3 pt-4 no-print">
+              {/* If a pre-generated PDF exists in /public reports index, show download */}
+              {kpiInfo && (() => {
+                const found = reportIndex.find((it) => it.id === kpiInfo.kpi_info_id);
+                if (!found) return null;
+                return (
+                  <Button variant="outline" asChild>
+                    <KPIDownloadLink
+                      id={kpiInfo.kpi_info_id}
+                      path={found.path}
+                      label={<><FileDown className="h-4 w-4 mr-2" /> ดาวน์โหลด PDF</>}
+                    />
+                  </Button>
+                );
+              })()}
               <Button onClick={onClose}>
                 ปิด
               </Button>

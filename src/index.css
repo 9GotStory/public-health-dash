@@ -146,3 +146,66 @@
     @apply bg-background text-foreground overflow-x-hidden;
   }
 }
+
+/* Print styles for KPI detail modal */
+@media print {
+  /* Only print the KPI printable area */
+  body * {
+    visibility: hidden !important;
+  }
+  #kpi-printable, #kpi-printable * {
+    visibility: visible !important;
+  }
+
+  /* Position printable area at the top-left and expand */
+  #kpi-printable {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    /* Override centering from flex/grid containers */
+    align-self: flex-start !important; /* flex cross-axis (vertical in row) */
+    justify-self: stretch !important;  /* grid main-axis */
+    place-self: start stretch !important; /* grid shorthand */
+    vertical-align: top !important;     /* table/grid fallback */
+  }
+
+  /* Ensure content is not clipped by any scroll/overflow wrappers */
+  #kpi-printable, #kpi-printable * {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  /* Hide elements explicitly marked as no-print */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Preserve colors when printing */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Avoid breaking inside cards/sections when possible */
+  .avoid-break {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}
